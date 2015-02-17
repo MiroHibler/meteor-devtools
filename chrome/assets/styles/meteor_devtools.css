@@ -1,0 +1,26 @@
+.panel-heading span {
+    margin-top: -20px;
+    font-size: 15px;
+}
+
+.row {
+    /* margin-top: 40px; */
+    /* padding: 0 10px; */
+}
+
+.clickable {
+    cursor: pointer;
+}
+
+.glyphicon {
+	position: absolute;
+	right: 30px;
+	display: inline-block;
+	font-family: 'Glyphicons Halflings';
+	font-style: normal;
+	font-weight: bold;
+	line-height: 2.5;
+	font-size: initial;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale
+}

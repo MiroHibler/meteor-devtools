@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="description" content="">
+		<meta name="author" content="">
+
+		<title>DevTools Meteor</title>
+
+		<!-- Bootstrap core CSS -->
+		<link rel="stylesheet" href="../assets/lib/css/bootstrap.min.css">
+
+		<link rel="stylesheet" href="../assets/lib/css/jsoneditor.min.css">
+
+		<!-- Custom styles for this template -->
+		<link rel="stylesheet" href="../assets/styles/starter-template.css">
+
+		<link rel='stylesheet' href='../assets/styles/meteor.min.css'>
+		<link rel='stylesheet' href='../assets/styles/json2html.css'>
+
+		<link rel='stylesheet' href='../assets/styles/meteor_devtools.css'>
+	</head>
+
+	<body>
+
+		<nav class="navbar navbar-inverse navbar-fixed-top">
+			<div class="container">
+				<div class="navbar-header">
+					<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+						<span class="sr-only">Toggle navigation</span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+					</button>
+					<a class="navbar-brand" href="#" style="text-transform: capitalize;">disconnected</a>
+				</div>
+				<div id="navbar" class="collapse navbar-collapse">
+					<ul class="nav navbar-nav">
+						<!-- li class="active"><a href="#">Home</a></li>
+						<li><a href="#about">About</a></li>
+						<li><a href="#contact">Contact</a></li -->
+						<li><a href="http://meteor.com"><span id="release"></span></a></li>
+					</ul>
+					<ul class="nav navbar-nav navbar-right">
+						<li class="dropdown">
+							<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><span id="userName"></span> <span class="caret current-user hidden"></span></a>
+							<ul class="dropdown-menu" role="menu">
+								<li><a href="#">Log Out</a></li>
+							</ul>
+						</li>
+					</ul>
+				</div><!--/.nav-collapse -->
+			</div>
+		</nav>
+
+		<div class="container">
+			<div class="starter-template">
+				<section id="panel" style="display: none;">
+					<div class="row current-user" style="display: none;">
+						<div class="col-md-12">
+							<div class="panel panel-default">
+								<div class="panel-heading">
+									<h3 class="panel-title">Current User</h3>
+									<span class="pull-right clickable"><i class="glyphicon glyphicon-chevron-up"></i></span>
+								</div>
+								<div id="currentUserEditor" class="panel-body json-editor"></div>
+							</div>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-md-12">
+							<div class="panel panel-default">
+								<div class="panel-heading">
+									<h3 class="panel-title">Users</h3>
+									<span class="pull-right clickable"><i class="glyphicon glyphicon-chevron-up"></i></span>
+								</div>
+								<div id="usersEditor" class="panel-body json-editor"></div>
+							</div>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-md-12">
+							<div class="panel panel-default">
+								<div class="panel-heading">
+									<h3 class="panel-title">Session</h3>
+									<span class="pull-right clickable"><i class="glyphicon glyphicon-chevron-up"></i></span>
+								</div>
+								<div id="sessionEditor" class="panel-body json-editor"></div>
+							</div>
+						</div>
+					</div>
+					<!-- div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+						<div class="panel panel-default">
+							<div class="panel-heading" role="tab" id="headingOne">
+								<h4 class="panel-title">
+									<a data-toggle="" data-parent="#accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+										Current User
+									</a>
+								</h4>
+							</div>
+							<div id="collapseOne" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne">
+								<div id="currentUserEditor" class="panel-body"></div>
+							</div>
+						</div>
+						<div class="panel panel-default">
+							<div class="panel-heading" role="tab" id="headingTwo">
+								<h4 class="panel-title">
+									<a class="collapsed" data-toggle="" data-parent="#accordion" href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+										Users
+									</a>
+								</h4>
+							</div>
+							<div id="collapseTwo" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">
+								<div id="usersEditor" class="panel-body"></div>
+							</div>
+						</div>
+						<div class="panel panel-default">
+							<div class="panel-heading" role="tab" id="headingThree">
+								<h4 class="panel-title">
+									<a class="collapsed" data-toggle="" data-parent="#accordion" href="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+										Session
+									</a>
+								</h4>
+							</div>
+							<div id="collapseThree" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingThree">
+								<div id="sessionEditor" class="panel-body"></div>
+							</div>
+						</div>
+					</div -->
+				</section>
+				<section id="notice">
+					<p class="lead">
+						<a target="_blank" href="http://meteor.com"<img src="../assets/icons/icon128.png" alt="Meteor"/></a><br/>
+						<h1>Meteor DevTools v<span id="meteorDevToolsVersion"></span></h1>
+						<h3 class="no-app">No app detected.</h3>
+						<h3 class="no-app" style="display: none;">Reloading...</h3>
+					</p>
+					<p class="lead no-app">Is <a target="_blank" href="https://github.com/MiroHibler/meteor-devtools#quick-setup"><code>meteor-devtools</code></a> running?</p>
+				</section>
+			</div>
+		</div><!-- /.container -->
+
+
+		<!-- Bootstrap core JavaScript
+		================================================== -->
+		<!-- Placed at the end of the document so the pages load faster -->
+		<script type='text/javascript' src="../assets/lib/js/lodash.min.js"></script>
+		<script type='text/javascript' src="../assets/lib/js/jquery-2.1.3.min.js"></script>
+		<script type='text/javascript' src="../assets/lib/js/bootstrap-3.3.2.min.js"></script>
+		<!-- script src="../assets/lib/js/_json2html.js"></script -->
+		<script type='text/javascript' src='../assets/lib/js/jsondiffpatch.min.js'></script>
+		<!-- script type='text/javascript' src='../assets/lib/js/jsondiffpatch-formatters.min.js'></script -->
+		<script type='text/javascript' src="../assets/lib/js/jsonutils.js"></script>
+		<script type='text/javascript' src="../assets/lib/js/jsoneditor.min.js"></script>
+		<script type='text/javascript' src="../assets/js/meteor_devtools.js"></script>
+		<script type='text/javascript' src="meteor.js"></script>
+	</body>
+</html>

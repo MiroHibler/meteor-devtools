@@ -1,0 +1,36 @@
+{
+	"name"                    : "Meteor DevTools",
+	"version"                 : "0.0.1",
+	"description"             : "Meteor debugging with Chrome DevTools",
+	"icons": {
+		"16" : "assets/icons/icon16.png",
+		"48" : "assets/icons/icon48.png",
+		"128": "assets/icons/icon128.png"
+	},
+	"devtools_page"           : "meteor_devtools.html",
+	"content_scripts"         : [{
+		"matches"   : ["<all_urls>"],
+		"js"        : ["content.js"],
+		"run_at"    : "document_start",
+		"all_frames": true
+	}],
+	"background"              : {
+		"scripts": [
+			"background.js"
+		]
+	},
+	"permissions"             : [
+		"tabs",
+		"<all_urls>",
+		"storage"
+	],
+	"content_security_policy" : "default-src 'self'  chrome-extension-resource: ; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-eval';  connect-src *; frame-src *;",
+	"page_action"             : {
+		"default_icon": {
+			"19": "assets/icons/icon19.png",
+			"38": "assets/icons/icon38.png"
+		},
+		"default_title": "DevTools Meteor"
+	},
+	"manifest_version"        : 2
+}

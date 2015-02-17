@@ -1,0 +1,31 @@
+body {
+	color: white;
+	font-size: 100%;
+}
+
+pre {
+	text-align: left;
+	background-color: black;
+	color: aliceblue;
+	font-size: 100%;
+}
+
+.string {
+	color: aquamarine;
+}
+
+.number {
+	color: darkorange;
+}
+
+.boolean {
+	color: chartreuse;
+}
+
+.null {
+	color: magenta;
+}
+
+.key {
+	color: bisque;
+}
