@@ -1,0 +1,9 @@
+<template name="contentHeader">
+	<section class="content-header">
+		<h1>{{ activeView.name }}<small>{{ activeView.section }}</small></h1>
+		<ol class="breadcrumb">
+			<li><a href="#"><i class="fa fa-{{ activeView.icon }}"></i> Home</a></li>
+			<li class="active">{{ activeView.name }}</li>
+		</ol>
+	</section>
+</template>

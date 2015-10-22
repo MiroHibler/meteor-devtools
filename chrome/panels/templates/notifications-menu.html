@@ -1,0 +1,26 @@
+<template name="notificationsMenu">
+	<li class="dropdown notifications-menu">
+		<!-- Menu toggle button -->
+		<a href="#" class="dropdown-toggle" data-toggle="dropdown">
+			<i class="fa fa-bell-o"></i>
+		{{#if showNotifications }}
+			<span data-notification="count" class="label label-warning">{{ notificationsCount }}</span>
+		{{/if}}
+		</a>
+
+		<ul class="dropdown-menu">
+			<li class="header">You have {{#if showNotifications }}{{ notificationsCount }}{{else}}no{{/if}} notifications</li>
+			<li>
+				<!-- Inner Menu: contains the notifications -->
+				<ul data-notification="list" class="menu">
+			{{#if notifications }}
+				{{#each notifications }}
+					{{> notification }}
+				{{/each}}
+			{{/if}}
+				</ul>
+			</li>
+			<!-- li class="footer"><a href="#">View all</a></li -->
+		</ul>
+	</li>
+</template>

@@ -11,43 +11,46 @@ var myTabId,
 	openCount = 0,
 	sendToDevTools = function ( message, sendResponse ) {
 
-		console.info( ' >-> sendToDevTools: %o', message.data );
+		DevTools.console.log( '[BG]  >-->  sendToDevTools: ', message.data );
 
-		connections[message.tabId].postMessage( message.data );
+		connections[ message.tabId ].postMessage( message.data );
 	},
+
 	sendToMeteor = function ( message, sendResponse ) {
 
-		console.info( ' <-< sendToMeteor: %o', message.data );
+		DevTools.console.log( '[BG]  <--<  sendToMeteor: ', message.data );
 
-		chrome.tabs.sendMessage( message.tabId, message.data, function ( response ) {
-			if ( response ) {
+		if ( message.tabId ) {
+			chrome.tabs.sendMessage( message.tabId, message.data, function ( response ) {
+				if ( response ) {
 
-				console.info( '√<-< sentToMeteor: %o', response.sentToMeteor );
+					DevTools.console.success( '[BG] √<--<  receivedByMeteor: ', response.sentToMeteor );
 
-			} else {
-				// We lost connection with content script,
-				// so we'll try other ways
-				console.info( 'X<-< sentToMeteor ERROR: %o', chrome.runtime.lastError );
+				} else {
+					// We lost connection with content script,
+					// so we'll try other ways
+					DevTools.console.error( '[BG] X<--<  sendToMeteor ERROR: ', chrome.runtime.lastError );
 
-				// For now, just reload the inspectedWindow
-				if ( !isReloading ) {
-					isReloading = true;
+					// For now, just reload the inspectedWindow
+					if ( !isReloading ) {
+						isReloading = true;
 
-					sendToDevTools({
-						// Actually, we're sending this only to content script
-						data  : {
-							action: 'reload'
-						},
-						tabId : message.tabId
-					}, function () {
+						sendToDevTools({
+							// Actually, we're sending this only to content script
+							data  : {
+								action: 'reload'
+							},
+							tabId : message.tabId
+						}, function () {
 
-						console.info( 'Meteor App reloaded.' );
+							DevTools.console.info( '[BG] @@@@@@ Meteor App reloaded.' );
 
-						isReloading = false;
-					});
+							isReloading = false;
+						});
+					}
 				}
-			}
-		});
+			});
+		}
 	};
 
 chrome.runtime.onConnect.addListener( function ( port ) {
@@ -56,7 +59,7 @@ chrome.runtime.onConnect.addListener( function ( port ) {
 				case 'init':
 					// Initialize communication
 					myTabId = message.tabId;
-					connections[myTabId] = port;
+					connections[ myTabId ] = port;
 
 					// Initialize connection
 					window.postMessage({
@@ -70,20 +73,43 @@ chrome.runtime.onConnect.addListener( function ( port ) {
 						data: {
 							action: 'get',
 							target: [
-								'isReady',
-								'release'
+								'absoluteUrl',
+								'release',
+								'insecure',
+								'autopublish',
+								'isReady'
 							]
 						},
 						tabId : myTabId
 					}, sendResponse );
+
 					return;
+
 				case 'send':
+					// Check if there are local actions
+					switch ( message.data.action ) {
+						case 'settings':
+							DevTools.settings.set( message.data.data );
+
+							break;
+
+						case 'console.clear':
+							console.clear();
+
+							break;
+
+						default:
+							// Nothing yet...
+					}
+
 					// Send message to Meteor App
 					sendToMeteor({
 						data : message.data,
 						tabId: myTabId
 					}, sendResponse );
+
 					break;
+
 				default:
 					// Accepts messages from the inspectedPage
 					// and send them to the panel
@@ -93,8 +119,9 @@ chrome.runtime.onConnect.addListener( function ( port ) {
 
 	if ( port.name === 'meteor-devtools' ) {
 		if ( openCount === 0 ) {
-			console.info( 'Meteor DevTools started.' );
+			DevTools.console.info( '[BG] >>>>>> Signed in. Hello!' );
 		}
+
 		openCount++;
 
 		// Listen to messages sent from the panel
@@ -116,15 +143,17 @@ chrome.runtime.onConnect.addListener( function ( port ) {
 					tabId : myTabId
 				});
 
-				console.info( 'Meteor DevTools signed off. Bye.' );
+				DevTools.console.info( '[BG] <<<<<< Signed off. Bye!' );
 			}
 
 			port.onMessage.removeListener( devToolsListener );
 
 			tabs = Object.keys( connections );
+
 			for ( var i = 0, len = tabs.length; i < len; i++ ) {
-				if ( connections[tabs[i]] == port ) {
-					delete connections[tabs[i]];
+				if ( connections[ tabs[ i ] ] == port ) {
+					delete connections[ tabs[ i ] ];
+
 					break;
 				}
 			}
@@ -140,13 +169,29 @@ chrome.runtime.onMessage.addListener( function ( request, sender, sendResponse )
 		var tabId = sender.tab.id;
 
 		if ( tabId in connections ) {
-			connections[tabId].postMessage( request );
-		} else {
-			console.log( 'Tab not found in connection list.' );
+			connections[ tabId ].postMessage( request );
+		// } else {
+		// 	DevTools.console.error( '[BG] !!!!! Error: Tab not found in connection list.' );
 		}
-	} else {
-		console.log( 'sender.tab not defined.' );
+	// } else {
+	// 	DevTools.console.error( '[BG] !!!!! Error: "sender.tab" not defined.' );
 	}
 
 	return true;
+});
+
+chrome.tabs.onUpdated.addListener( function ( tabId, changeInfo, tab ) {
+	DevTools.console.info( '[BG] ====== Tab "%s" updated: %o, %o', tabId, changeInfo, tab );
+
+	if ( tabId in connections ) {
+		sendToDevTools({
+			data  : {
+				action: 'update',
+				data  : tab
+			},
+			tabId : tabId
+		}, function () {
+			DevTools.console.info( '[BG] ------ Meteor App status: %s', changeInfo.status );
+		});
+	}
 });

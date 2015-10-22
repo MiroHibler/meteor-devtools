@@ -1,0 +1,56 @@
+#meteorDevTools {
+	/*position: absolute;*/
+	width: 100%;
+	height: 100%;
+	/* top: 40px; */
+	/* left: 0; */
+	/* right: 0; */
+	/* bottom: 0; */
+	border: 0;
+}
+
+.overlay {
+	text-align: center;
+}
+
+.overlay i.fa.fa-refresh.fa-spin {
+	font-size: 60px;
+}
+
+.framed .wrapper {
+	height: 100%;
+}
+
+.framed .content-wrapper {
+	margin-left: 0px;
+}
+
+.framed .content {
+	padding: 0px;
+}
+
+.jsoneditor {
+	border: none;
+}
+
+.jsoneditor .menu {
+	display: none;
+}
+
+.jsoneditor-contextmenu ul {
+	width: 126px;
+}
+/*
+.glyphicon {
+	position: absolute;
+	right: 30px;
+	display: inline-block;
+	font-family: 'Glyphicons Halflings';
+	font-style: normal;
+	font-weight: bold;
+	line-height: 2.5;
+	font-size: initial;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale
+}
+*/

@@ -1,36 +1,47 @@
 {
-	"name"                    : "Meteor DevTools",
-	"version"                 : "0.0.1",
-	"description"             : "Meteor debugging with Chrome DevTools",
-	"icons": {
+	"name"                   : "Meteor DevTools",
+	"version"                : "0.0.2",
+	"description"            : "Meteor debugging with Chrome DevTools",
+	"icons"                  : {
 		"16" : "assets/icons/icon16.png",
 		"48" : "assets/icons/icon48.png",
 		"128": "assets/icons/icon128.png"
 	},
-	"devtools_page"           : "meteor_devtools.html",
-	"content_scripts"         : [{
+	"devtools_page"          : "devtools_page.html",
+	"content_scripts"        : [{
 		"matches"   : ["<all_urls>"],
-		"js"        : ["content.js"],
+		"js"        : [
+			"assets/lib/js/lodash-4.0.0-pre.js",
+			"assets/js/storage.js",
+			"assets/js/settings.js",
+			"assets/js/window.js",
+			"assets/js/console.js",
+			"content.js"
+		],
 		"run_at"    : "document_start",
 		"all_frames": true
 	}],
-	"background"              : {
+	"background"             : {
 		"scripts": [
-			"background.js"
+			"background.js",
+			"assets/js/storage.js",
+			"assets/js/settings.js",
+			"assets/js/console.js"
 		]
 	},
-	"permissions"             : [
+	"permissions"            : [
 		"tabs",
+		"contextMenus",
 		"<all_urls>",
 		"storage"
 	],
-	"content_security_policy" : "default-src 'self'  chrome-extension-resource: ; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-eval';  connect-src *; frame-src *;",
-	"page_action"             : {
+	"content_security_policy": "default-src 'self' chrome-extension-resource:; style-src 'self' 'unsafe-eval' 'unsafe-inline' chrome-extension-resource: text/javascript http://fonts.googleapis.com https://fonts.googleapis.com http://fonts.gstatic.com https://fonts.gstatic.com https://maxcdn.bootstrapcdn.com https://maxcdn.bootstrapcdn.com http://code.ionicframework.com https://code.ionicframework.com; font-src http://fonts.googleapis.com https://fonts.googleapis.com http://fonts.gstatic.com https://fonts.gstatic.com https://maxcdn.bootstrapcdn.com https://maxcdn.bootstrapcdn.com http://code.ionicframework.com https://code.ionicframework.com; script-src 'self' 'unsafe-eval'; connect-src *; frame-src *;",
+	"page_action"            : {
 		"default_icon": {
 			"19": "assets/icons/icon19.png",
 			"38": "assets/icons/icon38.png"
 		},
-		"default_title": "DevTools Meteor"
+		"default_title": "DevTools for Meteor"
 	},
-	"manifest_version"        : 2
+	"manifest_version"       : 2
 }

@@ -1,0 +1,18 @@
+<template name="userAccountMenu">
+	<li class="dropdown user user-menu">
+		<!-- Menu Toggle Button -->
+		<a href="#" class="dropdown-toggle" data-toggle="dropdown">
+			<span class="userName hidden-xs">{{#if userName }}{{ userName }}{{else}}{{ userStatus }}{{/if}}</span>
+		</a>
+	{{#if user }}
+		<ul class="dropdown-menu">
+			<!-- Menu Footer-->
+			<li class="user-footer">
+				<div class="pull-right">
+					<a href="#" id="signout" class="btn btn-default btn-flat">Sign out</a>
+				</div>
+			</li>
+		</ul>
+	{{/if}}
+	</li>
+</template>

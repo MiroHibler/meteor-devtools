@@ -1,46 +1,48 @@
 // This is included and executed in the inspected page
 
 var myTabId,
-	connect = function () {
-		chrome.runtime.onMessage.addListener( receiveMessageFromDevTools );
-	},
 	sendMessageToDevTools = function ( messageForDevTools ) {
 
-		console.info( ' ->| sendMessageToDevTools: %o', messageForDevTools );
+		DevTools.console.log( '[IS]   ->|  sendMessageToDevTools: ', messageForDevTools );
 
 		chrome.runtime.sendMessage({
 			data : messageForDevTools.data,
 			tabId: myTabId
 		}, function ( response ) {
 			// The callback here can be used to execute something on receipt
-			// console.info( 'Response: ' + response );
+			// DevTools.console.log( '[IS]  <-|  Response: ' + response );
 		});
 	},
+
 	receiveMessageFromDevTools = function ( messageForMeteor, sender, sendResponse ) {
 
-		console.log( ' <-| receiveMessageFromDevTools: %o', messageForMeteor );
+		DevTools.console.log( '[IS]   <-|  receiveMessageFromDevTools: ', messageForMeteor );
 
 		switch ( messageForMeteor.action ) {
 			case 'init':
 				myTabId = messageForMeteor.tabId;
+
 				break;
+
 			default:
 				// Nothing for now...
 		}
 
 		sendMessageToMeteor( messageForMeteor, sendResponse );
 	},
+
 	sendMessageToMeteor = function ( message, sendResponse ) {
 
-		console.info( ' |<- sendMessageToMeteor: %o', message );
+		DevTools.console.log( '[IS]  |<-   sendMessageToMeteor: ', message );
 
 		window.postMessage({
-			source: 'devtools-meteor',
+			source: 'devtools-meteor' + DevTools.iFramed(),
 			data  : message
 		}, '*' );
 
 		sendResponse({ sentToMeteor: true });
 	},
+
 	receivePublicMessage = function ( publicMessage ) {
 		if ( publicMessage.source !== window ) return;
 
@@ -57,20 +59,24 @@ var myTabId,
 		if ( publicMessageData ) {
 			if ( !publicMessageData.data || typeof publicMessageData.data !== 'object' ) return;
 
-			if ( publicMessageData.source === 'meteor-devtools' ) {
+			if ( publicMessageData.source === ( 'meteor' + DevTools.iFramed() + '-devtools' ) ) {
 
-				console.info( ' ~~> receivePublicMessage: %o', publicMessage );
+				DevTools.console.log( '[IS]   ~>   receivePublicMessage: ', publicMessage );
 
 				sendMessageToDevTools( publicMessageData );
 
-			} else if ( publicMessageData.source === 'devtools-meteor' ) {
+			} else if ( publicMessageData.source === ( 'devtools-meteor' + DevTools.iFramed() ) ) {
 
-				console.info( ' <~~ receivePublicMessage: %o', publicMessage );
+				DevTools.console.log( '[IS]   <~   receivePublicMessage: ', publicMessage );
 
 				if ( publicMessageData.data.action === 'reconnect' ) connect();
 
 			}
 		}
+	},
+
+	connect = function () {
+		chrome.runtime.onMessage.addListener( receiveMessageFromDevTools );
 	};
 
 ( function () {
@@ -91,13 +97,16 @@ var myTabId,
 	/*
 	 | Query Meteor App Status
 	 */
-	sendMessageToMeteor({
-		action: 'get',
-		target: [
-			'isReady',
-			'release'
-		]
-	}, function ( response ) {
-		console.info( '√|<- receivedByMeteor: %o', response.sentToMeteor );
-	});
+	// sendMessageToMeteor({
+	// 	action: 'get',
+	// 	target: [
+	// 		'absoluteUrl',
+	// 		'release',
+	// 		'insecure',
+	// 		'autopublish',
+	// 		'isReady'
+	// 	]
+	// }, function ( response ) {
+	// 	DevTools.console.success( '[IS] √|<-  receivedByMeteor: ', response.sentToMeteor );
+	// });
 })();

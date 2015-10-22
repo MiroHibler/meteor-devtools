@@ -1,0 +1,21 @@
+<template name="content">
+	<!-- Main content -->
+	<section class="content">
+{{#if isReady }}
+	{{#if showDashboard }}
+		{{> dashboard }}
+	{{else}}
+		{{#if showSession }}
+			{{> sessionVariables }}
+		{{else}}
+			{{#if showUsers }}
+				<!-- iframe containing the real Meteor page from the app -->
+				{{> meteorDevTools }}
+			{{/if}}
+		{{/if}}
+	{{/if}}
+{{else}}
+	{{> loading }}
+{{/if}}
+	</section>
+</template>
