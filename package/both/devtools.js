@@ -1,6 +1,10 @@
 DevTools = {
 	nativeTargets   : [
 		'status',
+		// 'meteorSettings',
+		// 'packages',
+		// 'collections',
+		// 'templates',
 		'insecure',
 		'autopublish',
 		'loggingIn',

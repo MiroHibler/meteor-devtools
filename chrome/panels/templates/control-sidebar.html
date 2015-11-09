@@ -60,7 +60,9 @@
 
 					<div class="form-group">
 						<label class="control-sidebar-subheading">
-							Clear logs
+							<!-- This is a hack because HTMLtoDOM parser throws out single <a>
+								tag out of <label> if placed together with a string... -->
+							<a href="#" data-logging="clear" class="text-red">Clear logs</a>
 							<a href="#" data-logging="clear" class="text-red pull-right"><i class="fa fa-trash-o"></i></a>
 						</label>
 					</div><!-- /.form-group -->

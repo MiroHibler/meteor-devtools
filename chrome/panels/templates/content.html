@@ -11,6 +11,15 @@
 			{{#if showUsers }}
 				<!-- iframe containing the real Meteor page from the app -->
 				{{> meteorDevTools }}
+			{{else}}
+				{{#if showMeteorSettings }}
+					{{> meteorSettings }}
+				{{else}}
+					{{#if showPackages }}
+						{{> packagesList }}
+					{{else}}
+					{{/if}}
+				{{/if}}
 			{{/if}}
 		{{/if}}
 	{{/if}}

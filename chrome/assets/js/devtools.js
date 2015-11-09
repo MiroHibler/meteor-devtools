@@ -15,19 +15,32 @@ DevTools = {
 	inspectedApp: {
 		notifications: new ReactiveVar([]),
 		release      : new ReactiveVar(),
+
 		status       : new ReactiveVar(),
-		absoluteUrl  : new ReactiveVar(),
-		currentUser  : new ReactiveVar(),
+
+		absoluteUrl  : new ReactiveVar(''),
+		settings     : new ReactiveVar(),
+		packages     : new ReactiveVar([]),
+		collections  : new ReactiveVar([]),
+		templates    : new ReactiveVar([]),
+
 		loggingIn    : new ReactiveVar(),
-		// users      : new ReactiveVar(),
+		currentUser  : new ReactiveVar(),
+		users        : new ReactiveVar([]),
 		session      : new ReactiveVar()
 	},
 
 	trackingTargets: [
 		'status',
+
+		// 'meteorSettings',
+		// 'packages',
+		// 'collections',
+		// 'templates',
+
 		'loggingIn',
 		'currentUser',
-		// 'users',
+		'users',
 		'session'
 	],
 

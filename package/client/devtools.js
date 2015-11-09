@@ -14,6 +14,31 @@ var meteorConnectionSend,
 		if ( settings && settings.logging && settings.logging.DDP ) DevTools.console.log( '[MC] DDP <----| ', JSON.parse( message ) );
 	};
 
+Template.forEach = function ( callback ) {
+	// for some reason we get the "body" template twice when looping, so
+	// we track that and only call the callback once.
+	var alreadyDidBody = false;
+
+	for ( var template in Template ) {
+		if ( Template.hasOwnProperty( template ) ) {
+			var tempTemplate = Template[ template ];
+
+			if ( Blaze.isTemplate( tempTemplate ) ) {
+				if ( tempTemplate.viewName === 'body' ) {
+					if ( !alreadyDidBody ) {
+						alreadyDidBody = true;
+
+						callback( tempTemplate );
+					}
+				} else {
+					callback( tempTemplate );
+				}
+			}
+		}
+	}
+};
+
+
 DevTools = _.extend( DevTools, {
 	isGUIReady: new ReactiveVar( false ),
 
@@ -90,6 +115,60 @@ DevTools = _.extend( DevTools, {
 
 				break;
 
+			case 'meteorSettings':
+				Meteor.call( 'DevTools.getMeteorSettings', function ( error, meteorSettings ) {
+					if ( error ) {
+						// Handle Errors...
+					} else {
+						self.send({
+							meteorSettings: meteorSettings
+						});
+					}
+				});
+
+				break;
+
+			case 'packages':
+				// NOTE: Currently, only package name is available
+				self.send({
+					packages: _.map( Object.keys( Package ), function ( packageName ) {
+						return {
+							name   : packageName,
+							version: '?.?.?',
+							release: '?.?'
+						}
+					})
+				});
+
+				break;
+
+			case 'collections':
+				var self = this,
+					mongoCollections = ( typeof Mongo != 'undefined' ) ? Mongo.Collection.getAll() : [],
+					collections = _.map( mongoCollections, function ( mongoCollection ) {
+						if ( mongoCollection.name ) return mongoCollection.name;
+					});
+
+				self.send({
+					collections: collections
+				});
+
+				break;
+
+			case 'templates':
+				var self = this,
+					listOfTemplates = [];
+
+				Template.forEach( function ( template ) {
+					listOfTemplates.push( template.viewName );
+				});
+
+				self.send({
+					templates: listOfTemplates
+				});
+
+				break;
+
 			case 'insecure':
 				self.send({
 					insecure: ( typeof Package.insecure != 'undefined' )
@@ -140,6 +219,11 @@ DevTools = _.extend( DevTools, {
 				// Not so fast grasshopper!
 				break;
 
+			case 'meteorSettings':
+				Meteor.call( 'DevTools.setMeteorSettings', data );
+
+				break;
+
 			case 'session':
 				for ( key in data ) {
 					if ( _.isObject( data[ key ] ) ) {
@@ -178,6 +262,30 @@ DevTools = _.extend( DevTools, {
 					self.targets[ target ] = self.statusTracker();
 
 					break;
+
+				// case 'meteorSettings':
+				// 	// Start tracking
+				// 	self.targets[ target ] = self.meteorSettingsTracker();
+
+				// 	break;
+
+				// case 'packages':
+				// 	// Start tracking
+				// 	self.targets[ target ] = self.packagesTracker();
+
+				// 	break;
+
+				// case 'collections':
+				// 	// Start tracking
+				// 	self.targets[ target ] = self.collectionsTracker();
+
+				// 	break;
+
+				// case 'templates':
+				// 	// Start tracking
+				// 	self.targets[ target ] = self.templatesTracker();
+
+				// 	break;
 
 				case 'currentUser':
 					// Start tracking
@@ -235,6 +343,63 @@ DevTools = _.extend( DevTools, {
 			});
 		});
 	},
+
+	// meteorSettingsTracker: function () {
+	// 	var self = this;
+
+	// 	return Tracker.autorun( function () {
+	// 		Meteor.call( 'DevTools.getMeteorSettings', function ( error, meteorSettings ) {
+	// 			if ( error ) {
+	// 				// Handle Errors...
+	// 			} else {
+	// 				self.send({
+	// 					meteorSettings: meteorSettings
+	// 				});
+	// 			}
+	// 		});
+	// 	});
+	// },
+
+	// packagesTracker: function () {
+	// 	var self = this;
+
+	// 	return Tracker.autorun( function () {
+	// 		self.send({
+	// 			packages: Object.keys( Package )
+	// 		});
+	// 	});
+	// },
+
+	// collectionsTracker: function () {
+	// 	var self = this;
+
+	// 	return Tracker.autorun( function () {
+	// 		var mongoCollections = ( typeof Mongo != 'undefined' ) ? Mongo.Collection.getAll() : [],
+	// 			collections = _.map( mongoCollections, function ( mongoCollection ) {
+	// 				if ( mongoCollection.name ) return mongoCollection.name;
+	// 			});
+
+	// 		self.send({
+	// 			collections: collections
+	// 		});
+	// 	});
+	// },
+
+	// templatesTracker: function () {
+	// 	var self = this;
+
+	// 	return Tracker.autorun( function () {
+	// 		var listOfTemplates = [];
+
+	// 		Template.forEach( function ( template ) {
+	// 			listOfTemplates.push( template.viewName );
+	// 		});
+
+	// 		self.send({
+	// 			templates: listOfTemplates
+	// 		});
+	// 	});
+	// },
 
 	currentUserTracker: function () {
 		var self = this;

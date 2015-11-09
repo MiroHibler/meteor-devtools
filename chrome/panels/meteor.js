@@ -4,7 +4,8 @@
 // chrome.devtools.*
 // chrome.extension.*
 
-var updateNotifications = function ( packageName, active ) {
+var rendered = false,
+	updateNotifications = function ( packageName, active ) {
 		var notifications = DevTools.inspectedApp.notifications.get() || [];
 
 		if ( packageName ) {
@@ -25,92 +26,114 @@ var updateNotifications = function ( packageName, active ) {
 Template.body.onCreated( function () {});
 
 Template.body.onRendered( function () {
-	initGUI();
+	if ( !rendered ) {
+		initGUI();
 
-	// Initialize Controller
-	DevTools.backgroundPageConnection.onMessage.addListener( function ( message ) {
+		// Initialize Controller
+		DevTools.backgroundPageConnection.onMessage.addListener( function ( message ) {
 
-		DevTools.console.success( '[DT]   ->|√ Received: ', message );
+			DevTools.console.success( '[DT]   ->|√ Received: ', message );
 
-		// Handle responses from the background page
-		switch ( message.action ) {
-			case 'update':
-				if ( message.data.status == 'complete' && !DevTools.isReady.get() ) DevTools.init();
+			// Handle responses from the background page
+			switch ( message.action ) {
+				case 'update':
+					if ( message.data.status == 'complete' && !DevTools.isReady.get() ) DevTools.init();
 
-				break;
+					break;
 
-			case 'reload':
-				DevTools.reload();
+				case 'reload':
+					DevTools.reload();
 
-				break;
+					break;
 
-			default:
-				var data = message.data;
+				default:
+					var data = message.data;
 
-				if ( data ) {
-					for ( var attribute in data ) {
-						// We want 'null' values as well!
-						switch ( attribute ) {
-							case 'isReady':
-								DevTools.isReady.set( data[ attribute ] );
+					if ( data ) {
+						for ( var attribute in data ) {
+							// We want 'null' values as well!
+							switch ( attribute ) {
+								case 'isReady':
+									DevTools.isReady.set( data[ attribute ] );
 
-								break;
+									break;
 
-							case 'absoluteUrl':
-								DevTools.inspectedApp.absoluteUrl.set( data[ attribute ] );
+								case 'absoluteUrl':
+									DevTools.inspectedApp.absoluteUrl.set( data[ attribute ] );
 
-								break;
+									break;
 
-							case 'release':
-								DevTools.inspectedApp.release.set( data[ attribute ] );
+								case 'release':
+									DevTools.inspectedApp.release.set( data[ attribute ] );
 
-								break;
+									break;
 
-							case 'status':
-								DevTools.inspectedApp.status.set( data[ attribute ] );
+								case 'status':
+									DevTools.inspectedApp.status.set( data[ attribute ] );
 
-								break;
+									break;
 
-							case 'insecure':
-								updateNotifications( attribute, data[ attribute ] );
+								case 'meteorSettings':
+									DevTools.inspectedApp.settings.set( data[ attribute ] );
 
-								break;
+									break;
 
-							case 'autopublish':
-								updateNotifications( attribute, data[ attribute ] );
+								case 'packages':
+									DevTools.inspectedApp.packages.set( data[ attribute ] );
 
-								break;
+									break;
 
-							case 'loggingIn':
-								DevTools.inspectedApp.loggingIn.set( data[ attribute ] );
+								case 'collections':
+									DevTools.inspectedApp.collections.set( data[ attribute ] );
 
-								break;
+									break;
 
-							case 'currentUser':
-								DevTools.inspectedApp.currentUser.set( data[ attribute ] );
+								case 'templates':
+									DevTools.inspectedApp.templates.set( data[ attribute ] );
 
-								break;
+									break;
 
-							case 'users':
-								// setupEditor( attribute, ( data[ attribute ] ) ? data[ attribute ] : {} );
-								// DevTools.inspectedApp.users.set( ( data[ attribute ] ) ? data[ attribute ] : {} );
+								case 'insecure':
+									updateNotifications( attribute, data[ attribute ] );
 
-								break;
+									break;
 
-							case 'session':
-								// setupEditor( attribute, ( data[ attribute ] ) ? data[ attribute ] : {} );
-								DevTools.inspectedApp.session.set( data[ attribute ] ) ? data[ attribute ] : {};
+								case 'autopublish':
+									updateNotifications( attribute, data[ attribute ] );
 
-								break;
+									break;
 
-							default:
-							// ..
+								case 'loggingIn':
+									DevTools.inspectedApp.loggingIn.set( data[ attribute ] );
+
+									break;
+
+								case 'currentUser':
+									DevTools.inspectedApp.currentUser.set( data[ attribute ] );
+
+									break;
+
+								case 'users':
+									DevTools.inspectedApp.users.set( ( data[ attribute ] ) ? data[ attribute ] : {} );
+
+									break;
+
+								case 'session':
+									DevTools.inspectedApp.session.set( data[ attribute ] ) ? data[ attribute ] : {};
+
+									break;
+
+								default:
+								// ..
+							}
 						}
 					}
-				}
-		}
-	});
+			}
+		});
 
-	// Initialize communication
-	DevTools.init();
+		// Initialize communication
+		DevTools.init();
+
+		rendered = true;
+	}
 });

@@ -55,6 +55,7 @@ Editor.prototype.set = function ( data ) {
 
 	self.deactivateFields();
 
+	self._oldJSON = data || {};
 	self._editor.set( data || {} );
 
 	if ( data && !_.isEmpty( data ) ) self.activateFields();
@@ -128,7 +129,7 @@ Editor.prototype.activateFields = function () {
 		fieldInputs,
 		valueInputs;
 
-	// self._editor.expandAll();
+	self._editor.expandAll();
 
 	fieldInputs = $( '#' + $( self._editor.container ).attr( 'id' ) + ' div[contenteditable="true"].field' ),
 	valueInputs = $( '#' + $( self._editor.container ).attr( 'id' ) + ' div[contenteditable="true"].value' );
@@ -149,7 +150,7 @@ Editor.prototype.activateFields = function () {
 		valueInputs.focusin( function ( eventObject ) {
 			self.setEditingFlag( true );
 
-			$( eventObject.currentTarget ).focusout( self.handleChange );
+			$( eventObject.currentTarget ).focusout( self.handleChange.bind( self ) );
 			$( eventObject.currentTarget ).keypress( function ( eventObject ) {
 				if ( eventObject.which == 13 ) {
 					eventObject.preventDefault();
@@ -168,8 +169,12 @@ Editor.prototype.activateFields = function () {
 Editor.prototype.deactivateFields = function () {
 	var self = this;
 
+	self._editor.expandAll();
+
 	$( '#' + $( self._editor.container ).attr( 'id' ) + ' div[contenteditable="true"].field' ).off();
 	$( '#' + $( self._editor.container ).attr( 'id' ) + ' div[contenteditable="true"].value' ).off();
+
+	// self._editor.collapseAll();
 
 	self.setEditingFlag( false );
 };

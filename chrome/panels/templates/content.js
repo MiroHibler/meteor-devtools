@@ -15,11 +15,17 @@ Template.content.helpers({
 
 	showUsers: function () {
 		return ( DevTools.activeView.get() == 'users' );
+	},
+
+	showPackages: function () {
+		return ( DevTools.activeView.get() == 'packages' );
+	},
+
+	showMeteorSettings: function () {
+		return ( DevTools.activeView.get() == 'meteorSettings' );
 	}
 });
 
 Template.content.onCreated( function () {});
-
 Template.content.onRendered( function () {});
-
 Template.content.onDestroyed( function () {});

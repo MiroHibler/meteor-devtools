@@ -17,10 +17,11 @@ Package.onUse( function ( api ) {
 	], 'server' );
 
 	api.use([
+		'underscore',
 		'reactive-var',
 		'reactive-dict',
 		'tracker',
-		'underscore'
+		'dburles:mongo-collection-instances'
 	], both );
 
 	api.use([
@@ -40,7 +41,8 @@ Package.onUse( function ( api ) {
 	api.use([
 		'templating',
 		'session',
-		'jquery'
+		'jquery',
+		'aldeed:template-extension'
 	], 'client' );
 
 	api.addFiles([
@@ -49,6 +51,7 @@ Package.onUse( function ( api ) {
 
 	api.addFiles([
 		'chrome/assets/js/console.js',
+		'package/server/methods.js',
 		'package/server/devtools.js'
 	], 'server' );
 

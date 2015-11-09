@@ -75,6 +75,10 @@ chrome.runtime.onConnect.addListener( function ( port ) {
 							target: [
 								'absoluteUrl',
 								'release',
+								'meteorSettings',
+								'packages',
+								'collections',
+								'templates',
 								'insecure',
 								'autopublish',
 								'isReady'

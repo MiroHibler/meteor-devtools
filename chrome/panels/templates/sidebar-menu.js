@@ -17,6 +17,13 @@ Template.sidebarMenu.helpers({
 		return ( DevTools.activeView.get() == 'users' );
 	},
 
+	isMPackagesViewActive: function () {
+		return ( DevTools.activeView.get() == 'packages' );
+	},
+
+	isMeteorSettingsViewActive: function () {
+		return ( DevTools.activeView.get() == 'meteorSettings' );
+	}
 });
 
 Template.sidebarMenu.onCreated( function () {});

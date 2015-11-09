@@ -1,0 +1,31 @@
+<template name="packagesList">
+	<div class="box">
+		<div class="box-header with-border">
+			<h3 class="box-title">Packages</h3>
+			<div class="box-tools pull-right">
+				<button class="btn btn-box-tool" data-widget="collapse" data-toggle="tooltip" title="Collapse"><i class="fa fa-minus"></i></button>
+				<!-- button class="btn btn-box-tool" data-widget="remove" data-toggle="tooltip" title="Remove"><i class="fa fa-times"></i></button -->
+			</div>
+		</div>
+		<div class="box-body no-padding">
+			<table class="table">
+				<thead>
+					<tr>
+						<th style="width: 10px">Core</th>
+						<th>Name</th>
+						<th style="width: 60px">Version</th>
+						<th style="width: 60px">Release</th>
+					</tr>
+				</thead>
+				<tbody>
+				{{#each packagesList }}
+					{{> packagesListItem }}
+				{{/each}}
+				</tbody>
+			</table>
+		</div>
+		<div class="box-footer">
+			<strong>Note:</strong> Package version and release data is not yet available (via API).
+		</div><!-- /.box-footer-->
+	</div><!-- /.box -->
+</template>

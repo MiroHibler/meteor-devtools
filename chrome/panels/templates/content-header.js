@@ -24,6 +24,20 @@ Template.contentHeader.helpers({
 					icon   : 'users'
 				};
 
+			case 'packages':
+				return {
+					name   : 'Packages',
+					section: 'DevTools',
+					icon   : 'cubes'
+				};
+
+			case 'meteorSettings':
+				return {
+					name   : 'Meteor Settings',
+					section: 'DevTools',
+					icon   : 'sliders'
+				};
+
 			default:
 				return {
 					name   : 'Undefined',
