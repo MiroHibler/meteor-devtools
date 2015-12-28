@@ -19,8 +19,13 @@ DevTools = {
 		status       : new ReactiveVar(),
 
 		absoluteUrl  : new ReactiveVar(''),
+		debuggerUrl  : new ReactiveVar(''),
 		settings     : new ReactiveVar(),
+		environment  : new ReactiveVar(),
+
 		packages     : new ReactiveVar([]),
+		packageInfo  : new ReactiveVar(),
+
 		collections  : new ReactiveVar([]),
 		templates    : new ReactiveVar([]),
 
@@ -31,13 +36,17 @@ DevTools = {
 	},
 
 	trackingTargets: [
+		'absoluteUrl',
+		'debuggerUrl',
 		'status',
-
-		// 'meteorSettings',
-		// 'packages',
-		// 'collections',
-		// 'templates',
-
+		'release',
+		'meteorSettings',
+		'meteorEnvironment',
+		'packages',
+		'collections',
+		'templates',
+		'insecure',
+		'autopublish',
 		'loggingIn',
 		'currentUser',
 		'users',

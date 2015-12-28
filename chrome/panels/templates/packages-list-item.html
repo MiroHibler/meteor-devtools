@@ -1,8 +1,18 @@
 <template name="packagesListItem">
 	<tr>
-		<td style="text-align: center;">{{#if isCorePackage }}<i class="fa fa-cube"></i>{{/if}}</td>
-		<td>{{ packageName }}</td>
+		<!-- <td style="text-align: center;">{{#if isCorePackage }}<img src="../assets/icons/icon16.png" alt="Core Package"></img>{{/if}}</td> -->
+		<td style="text-align: center;">{{#if isCorePackage }}<i class="icon-meteor-logo"></i>{{/if}}</td>
+		<td><a href="#" data-name="{{ packageName }}">{{ packageName }}</a></td>
 		<td style="text-align: center;">{{ packageVersion }}</td>
-		<td style="text-align: center;"><span class="badge bg-{{ relaseColor }}">{{ packageRelease }}</span></td>
+		<!-- td style="text-align: center;"><span class="badge bg-{{ relaseColor }}">{{ packageRelease }}</span></td -->
 	</tr>
+{{#if showInfo }}
+	{{#if packageInfo }}
+	<tr>
+		<td colspan="3"><pre>{{ packageInfo }}</pre></td>
+	</tr>
+	{{else}}
+		{{> loading }}
+	{{/if}}
+{{/if}}
 </template>

@@ -15,13 +15,15 @@ var meteorConnectionSend,
 	};
 
 Template.forEach = function ( callback ) {
-	// for some reason we get the "body" template twice when looping, so
+	// For some reason we get the "body" template twice when looping, so
 	// we track that and only call the callback once.
-	var alreadyDidBody = false;
+	var alreadyDidBody = false,
+		template,
+		tempTemplate;
 
-	for ( var template in Template ) {
+	for ( template in Template ) {
 		if ( Template.hasOwnProperty( template ) ) {
-			var tempTemplate = Template[ template ];
+			tempTemplate = Template[ template ];
 
 			if ( Blaze.isTemplate( tempTemplate ) ) {
 				if ( tempTemplate.viewName === 'body' ) {
@@ -40,8 +42,6 @@ Template.forEach = function ( callback ) {
 
 
 DevTools = _.extend( DevTools, {
-	isGUIReady: new ReactiveVar( false ),
-
 	init: function () {
 		var self = this;
 
@@ -88,22 +88,30 @@ DevTools = _.extend( DevTools, {
 		self.ready.set( true );
 	},
 
-	getValues: function ( targets ) {
+	// Getters & setters
+	getValues: function ( targets, data ) {
 		var self = this,
 			target;
 
 		for ( target in targets ) {
-			self.getValue( targets[ target ] );
+			self.getValue( targets[ target ], data );
 		}
 	},
 
-	getValue: function ( forVar ) {
+	getValue: function ( forVar, data ) {
 		var self = this;
 
 		switch ( forVar ) {
 			case 'absoluteUrl':
 				self.send({
 					absoluteUrl: Meteor.absoluteUrl()
+				});
+
+				break;
+
+			case 'debuggerUrl':
+				self.send({
+					debuggerUrl: 'http://localhost:8080/debug?port=5858'
 				});
 
 				break;
@@ -116,7 +124,7 @@ DevTools = _.extend( DevTools, {
 				break;
 
 			case 'meteorSettings':
-				Meteor.call( 'DevTools.getMeteorSettings', function ( error, meteorSettings ) {
+				Meteor.call( 'DevTools.meteorSettings.get', function ( error, meteorSettings ) {
 					if ( error ) {
 						// Handle Errors...
 					} else {
@@ -128,23 +136,40 @@ DevTools = _.extend( DevTools, {
 
 				break;
 
+			case 'meteorEnvironment':
+				Meteor.call( 'DevTools.meteorEnvironment.get', function ( error, meteorEnvironment ) {
+					if ( error ) {
+						// Handle Errors...
+					} else {
+						self.send({
+							meteorEnvironment: meteorEnvironment
+						});
+					}
+				});
+
+				break;
+
 			case 'packages':
-				// NOTE: Currently, only package name is available
-				self.send({
-					packages: _.map( Object.keys( Package ), function ( packageName ) {
-						return {
-							name   : packageName,
-							version: '?.?.?',
-							release: '?.?'
-						}
-					})
+				Meteor.call( 'DevTools.packages.getList', function ( error, packageList ) {
+					self.send({
+						packages: packageList
+					});
+				});
+
+				break;
+
+			case 'packageInfo':
+				Meteor.call( 'DevTools.packages.getInfo', data, function ( error, packageInfo ) {
+					self.send({
+						packageInfo: packageInfo
+					});
 				});
 
 				break;
 
 			case 'collections':
 				var self = this,
-					mongoCollections = ( typeof Mongo != 'undefined' ) ? Mongo.Collection.getAll() : [],
+					mongoCollections = ( typeof Mongo != 'undefined' && Mongo.Collection.getAll ) ? Mongo.Collection.getAll() : [],
 					collections = _.map( mongoCollections, function ( mongoCollection ) {
 						if ( mongoCollection.name ) return mongoCollection.name;
 					});
@@ -212,15 +237,15 @@ DevTools = _.extend( DevTools, {
 
 		switch ( forVar ) {
 			case 'currentUser':
-				// Not so fast grasshopper!
+				// Handled directly!
 				break;
 
 			case 'users':
-				// Not so fast grasshopper!
+				// Handled directly!
 				break;
 
 			case 'meteorSettings':
-				Meteor.call( 'DevTools.setMeteorSettings', data );
+				Meteor.call( 'DevTools.settings.set', data );
 
 				break;
 
@@ -257,56 +282,77 @@ DevTools = _.extend( DevTools, {
 
 		if ( !self.targets[ target ] ) {
 			switch ( target ) {
+				case 'absoluteUrl':
+					self.targets[ target ] = self.absoluteUrlTracker();
+
+					break;
+
+				case 'debuggerUrl':
+					self.targets[ target ] = self.debuggerUrlTracker();
+
+					break;
+
 				case 'status':
-					// Start tracking
 					self.targets[ target ] = self.statusTracker();
 
 					break;
 
-				// case 'meteorSettings':
-				// 	// Start tracking
-				// 	self.targets[ target ] = self.meteorSettingsTracker();
+				case 'release':
+					self.targets[ target ] = self.releaseTracker();
 
-				// 	break;
+					break;
 
-				// case 'packages':
-				// 	// Start tracking
-				// 	self.targets[ target ] = self.packagesTracker();
+				case 'meteorSettings':
+					self.targets[ target ] = self.meteorSettingsTracker();
 
-				// 	break;
+					break;
 
-				// case 'collections':
-				// 	// Start tracking
-				// 	self.targets[ target ] = self.collectionsTracker();
+				case 'meteorEnvironment':
+					self.targets[ target ] = self.meteorEnvironmentTracker();
 
-				// 	break;
+					break;
 
-				// case 'templates':
-				// 	// Start tracking
-				// 	self.targets[ target ] = self.templatesTracker();
+				case 'packages':
+					self.targets[ target ] = self.packagesTracker();
 
-				// 	break;
+					break;
+
+				case 'collections':
+					self.targets[ target ] = self.collectionsTracker();
+
+					break;
+
+				case 'templates':
+					self.targets[ target ] = self.templatesTracker();
+
+					break;
+
+				case 'insecure':
+					self.targets[ target ] = self.insecureTracker();
+
+					break;
+
+				case 'autopublish':
+					self.targets[ target ] = self.autopublishTracker();
+
+					break;
 
 				case 'currentUser':
-					// Start tracking
 					self.targets[ target ] = self.currentUserTracker();
 
 					break;
 
 				case 'users':
-					// Start tracking
 					self.targets[ target ] = self.usersTracker();
 
 					break;
 
 				case 'loggingIn':
-					// Start tracking
 					self.targets[ target ] = self.loggingInTracker();
 
 					break;
 
 				case 'session':
-					// Start tracking
 					self.targets[ target ] = self.sessionTracker();
 
 					break;
@@ -334,6 +380,26 @@ DevTools = _.extend( DevTools, {
 	},
 
 	// Trackers
+	absoluteUrlTracker: function () {
+		var self = this;
+
+		return Tracker.autorun( function () {
+			self.send({
+				absoluteUrl: Meteor.absoluteUrl()
+			});
+		});
+	},
+
+	debuggerUrlTracker: function () {
+		var self = this;
+
+		return Tracker.autorun( function () {
+			self.send({
+				debuggerUrl: 'http://localhost:8080/debug?port=5858'
+			});
+		});
+	},
+
 	statusTracker: function () {
 		var self = this;
 
@@ -344,62 +410,111 @@ DevTools = _.extend( DevTools, {
 		});
 	},
 
-	// meteorSettingsTracker: function () {
-	// 	var self = this;
+	releaseTracker: function () {
+		var self = this;
 
-	// 	return Tracker.autorun( function () {
-	// 		Meteor.call( 'DevTools.getMeteorSettings', function ( error, meteorSettings ) {
-	// 			if ( error ) {
-	// 				// Handle Errors...
-	// 			} else {
-	// 				self.send({
-	// 					meteorSettings: meteorSettings
-	// 				});
-	// 			}
-	// 		});
-	// 	});
-	// },
+		return Tracker.autorun( function () {
+			self.send({
+				release: Meteor.release
+			});
+		});
+	},
 
-	// packagesTracker: function () {
-	// 	var self = this;
+	meteorSettingsTracker: function () {
+		var self = this;
 
-	// 	return Tracker.autorun( function () {
-	// 		self.send({
-	// 			packages: Object.keys( Package )
-	// 		});
-	// 	});
-	// },
+		return Tracker.autorun( function () {
+			Meteor.call( 'DevTools.meteorSettings.get', function ( error, meteorSettings ) {
+				if ( error ) {
+					// Handle Errors...
+				} else {
+					self.send({
+						meteorSettings: meteorSettings
+					});
+				}
+			});
+		});
+	},
 
-	// collectionsTracker: function () {
-	// 	var self = this;
+	meteorEnvironmentTracker: function () {
+		var self = this;
 
-	// 	return Tracker.autorun( function () {
-	// 		var mongoCollections = ( typeof Mongo != 'undefined' ) ? Mongo.Collection.getAll() : [],
-	// 			collections = _.map( mongoCollections, function ( mongoCollection ) {
-	// 				if ( mongoCollection.name ) return mongoCollection.name;
-	// 			});
+		return Tracker.autorun( function () {
+			Meteor.call( 'DevTools.meteorEnvironment.get', function ( error, meteorEnvironment ) {
+				if ( error ) {
+					// Handle Errors...
+				} else {
+					self.send({
+						meteorEnvironment: meteorEnvironment
+					});
+				}
+			});
+		});
+	},
 
-	// 		self.send({
-	// 			collections: collections
-	// 		});
-	// 	});
-	// },
+	packagesTracker: function () {
+		var self = this;
 
-	// templatesTracker: function () {
-	// 	var self = this;
+		return Tracker.autorun( function () {
+			Meteor.call( 'DevTools.packages.getList', function ( error, packageList ) {
+				self.send({
+					packages: packageList
+				});
+			});
+		});
+	},
 
-	// 	return Tracker.autorun( function () {
-	// 		var listOfTemplates = [];
+	collectionsTracker: function () {
+		var self = this,
+			mongoCollections,
+			collections;
 
-	// 		Template.forEach( function ( template ) {
-	// 			listOfTemplates.push( template.viewName );
-	// 		});
+		return Tracker.autorun( function () {
+			mongoCollections = ( typeof Mongo != 'undefined' && Mongo.Collection.getAll ) ? Mongo.Collection.getAll() : [];
+			collections = _.map( mongoCollections, function ( mongoCollection ) {
+				if ( mongoCollection.name ) return mongoCollection.name;
+			});
 
-	// 		self.send({
-	// 			templates: listOfTemplates
-	// 		});
-	// 	});
-	// },
+			self.send({
+				collections: collections
+			});
+		});
+	},
+
+	templatesTracker: function () {
+		var self = this,
+			listOfTemplates = [];
+
+		return Tracker.autorun( function () {
+			Template.forEach( function ( template ) {
+				listOfTemplates.push( template.viewName );
+			});
+
+			self.send({
+				templates: listOfTemplates
+			});
+		});
+	},
+
+	insecureTracker: function () {
+		var self = this;
+
+		return Tracker.autorun( function () {
+			self.send({
+				insecure: ( typeof Package.insecure != 'undefined' )
+			});
+		});
+	},
+
+	autopublishTracker: function () {
+		var self = this;
+
+		return Tracker.autorun( function () {
+			self.send({
+				autopublish: ( typeof Package.autopublish != 'undefined' )
+			});
+		});
+	},
 
 	currentUserTracker: function () {
 		var self = this;
@@ -448,6 +563,7 @@ DevTools = _.extend( DevTools, {
 		});
 	},
 
+	// Communication
 	receive: function ( message ) {
 		var self = this,
 			data = message.data,
@@ -503,7 +619,7 @@ DevTools = _.extend( DevTools, {
 						break;
 
 					case 'get':
-						self.getValues( targets );
+						self.getValues( targets, data.data );
 
 						break;
 
@@ -539,95 +655,6 @@ DevTools = _.extend( DevTools, {
 			source: 'meteor' + self.iFramed() + '-devtools',
 			data  : message
 		}, '*' );
-	},
-
-	routerName: 'DevTools',
-
-	router: {
-		render: function ( templateName ) {
-			if (
-				templateName &&
-				templateName !== '' &&
-				Blaze.isTemplate( Template[ templateName ] )
-			) {
-				var self = this,
-					templateBody = Template.body;
-
-				if ( templateBody ) {
-					// TODO: Implement raw rendering
-
-					// Blaze.remove( templateBody );
-					// Blaze.render( Template[ templateName ], $( 'body' ) );
-				}
-			}
-		}
-	},
-
-	checkForRouter: function () {
-		var self = this;
-
-		if ( self.isFramed ) {
-			if ( Package[ 'iron:router' ] ) {
-				self.routerName = 'Iron.Router';
-				self.router = Package[ 'iron:router' ].Router;
-			} else if ( Package[ 'kadira:flow-router' ] ) {
-				self.routerName = 'FlowRouter';
-				self.router = Package[ 'kadira:flow-router' ].FlowRouter;
-			}
-
-			self.initRouter( self.routerName );
-		}
-	},
-
-	initRouter: function ( routerName ) {
-		var self = this;
-
-		switch ( routerName ) {
-			case 'Iron.Router':
-				self.router.route( '/devtools', {
-					name          : 'DevTools',
-					template      : 'DevTools',
-					layoutTemplate: 'DevToolsLayout'
-				});
-
-				// Ensure we bypass any checks
-				self.router.onBeforeAction( function () {
-					// DevTools.console.warn( '[MC] ###### onBeforeAction: ' + this.url );
-
-					if ( this.url.indexOf( '/devtools' ) < 0 ) {
-						this.next();
-					} else if ( !this._rendered ) {
-						this.render( 'DevTools' );
-					}
-				});
-
-				break;
-
-			case 'FlowRouter':
-				self.router.route( '/devtools', {
-					name: 'DevTools',
-					// TODO: Find out how to replace top layout
-
-					action: function () {
-						if ( Package[ 'kadira:blaze-layout' ] ) {
-							Package[ 'kadira:blaze-layout' ].BlazeLayout.render( 'DevTools' );
-						} else if ( Package[ 'kadira:react-layout' ] ) {
-							throw new Meteor.Error( -1, 'ReactLayout not supported', 'ReactLayout is not supported yet' );
-						} else {
-							self.router.render( 'DevTools' );
-						}
-					}
-				});
-
-				break;
-
-			default:	// 'DevTools'
-				if ( window.location.pathname.split( '/' )[ 0 ] == 'devtools' ) {
-					self.router.render( 'DevTools' );
-				}
-		}
-
-		// DevTools.console.info( '[MC] ###### Route set for ' + self.routerName + '!' );
 	}
 });
 

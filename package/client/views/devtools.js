@@ -1,8 +1,5 @@
 Template.DevTools.helpers({
-	isReady: function () {
-		return DevTools.isGUIReady.get();
+	version: function () {
+		return DevTools.VERSION;
 	}
-});
-
-Template.DevTools.onRendered( function () {
 });

@@ -1,0 +1,10 @@
+<template name="meteorDebugger">
+	<!-- iframe containing the real Meteor page from the app -->
+	<iframe
+		id="meteorDebugger"
+		name="meteorDebugger"
+		src="{{ debuggerUrl }}"
+		sandbox="allow-same-origin allow-forms allow-popups allow-scripts"
+		scrolling="no"
+	></iframe>
+</template>

@@ -1,0 +1,11 @@
+<head>
+	<script type="text/javascript">
+		var isFramed = ( window.location !== window.parent.location );
+		// Remote app's styling
+		if ( isFramed ) {
+			$( 'link[class=\'__meteor-css__\']' ).remove();
+			$( 'link[rel=\'stylesheet\']' ).remove();
+			$( 'style' ).remove();
+		}
+	</script>
+</head>

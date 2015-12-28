@@ -2,11 +2,15 @@ Template.content.events({});
 
 Template.content.helpers({
 	isReady: function () {
-		return DevTools.isReady.get();
+		return ( DevTools.activeView.get() == 'debugger' ) ? true : DevTools.isReady.get();
 	},
 
 	showDashboard: function () {
 		return ( DevTools.activeView.get() == 'dashboard' );
+	},
+
+	showCollections: function () {
+		return ( DevTools.activeView.get() == 'collections' );
 	},
 
 	showSession: function () {
@@ -23,6 +27,18 @@ Template.content.helpers({
 
 	showMeteorSettings: function () {
 		return ( DevTools.activeView.get() == 'meteorSettings' );
+	},
+
+	showMeteorEnvironment: function () {
+		return ( DevTools.activeView.get() == 'meteorEnvironment' );
+	},
+
+	showShell: function () {
+		return ( DevTools.activeView.get() == 'shell' );
+	},
+
+	showDebugger: function () {
+		return ( DevTools.activeView.get() == 'debugger' );
 	}
 });
 

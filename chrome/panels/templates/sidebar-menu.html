@@ -5,14 +5,16 @@
 		<!-- Optionally, you can add icons to the links -->
 		<li class="{{#if isDashboardViewActive }}active{{/if}}"><a href="#" data-view="dashboard"><i class="fa fa-dashboard"></i> <span>Dashboard</span></a></li>
 		<li class="{{#if isSessionViewActive }}active{{/if}}"><a href="#" data-view="session"><i class="fa fa-gears"></i> <span>Session variables</span></a></li>
+		<li class="{{#if isCollectionsViewActive }}active{{/if}}"><a href="#" data-view="collections"><i class="fa fa-folder"></i> <span>Collections</span></a></li>
 		<li class="{{#if isUsersViewActive }}active{{/if}}"><a href="#" data-view="users"><i class="fa fa-users"></i> <span>Users</span></a></li>
 		<li class="{{#if isPackagesViewActive }}active{{/if}}"><a href="#" data-view="packages"><i class="fa fa-cubes"></i> <span>Packages</span></a></li>
 		<li class="{{#if isMeteorSettingsViewActive }}active{{/if}}"><a href="#" data-view="meteorSettings"><i class="fa fa-sliders"></i> <span>Meteor Settings</span></a></li>
 		<li class="treeview">
-			<a href="#"><i class="fa fa-link"></i> <span>Multilevel</span> <i class="fa fa-angle-left pull-right"></i></a>
+			<a href="#"><i class="fa fa-server"></i> <span>Server Utilities</span> <i class="fa fa-angle-left pull-right"></i></a>
 			<ul class="treeview-menu">
-				<li><a href="#">Link in level 2</a></li>
-				<li><a href="#">Link in level 2</a></li>
+				<li class="{{#if isShellViewActive }}active{{/if}}"><a href="#" data-view="shell"><i class="fa fa-terminal"></i> <span>Server Shell</span></a></li>
+				<li class="{{#if isDebuggerViewActive }}active{{/if}}"><a href="#" data-view="debugger"><i class="fa fa-bug"></i> <span>Server Debugger</span></a></li>
+				<li class="{{#if isMeteorEnvironmentViewActive }}active{{/if}}"><a href="#" data-view="meteorEnvironment"><i class="fa fa-cogs"></i> <span>Server Environment</span></a></li>
 			</ul>
 		</li>
 	</ul><!-- /.sidebar-menu -->

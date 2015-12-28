@@ -1,156 +1,197 @@
+RactiveTemplate = Ractive.extend({
+	// // Lifecycle Events:
+	// // construct	...as soon as new Ractive(...) happens, before any setup work takes place
+	onconstruct: function ( options ) {
+		var self = this,
+			template = Template._templates[ self.component.name ];
+
+		self._constructor = template;
+
+		template._instance = self;
+	},
+	// // config	...once all configuration options have been processed
+	// onconfig: function () {},
+	// // init	...when the instance is ready to be rendered
+	oninit: function () {
+		var self = this,
+			template = self._constructor,
+			index = getIndex( self );
+
+		template.instances[ index ] = self;
+
+		if ( typeof template._helpers == 'object' && Object.keys( template._helpers ).length > 0 ) {
+			_.each( template._helpers, function ( helperHandler, helperName ) {
+				template.autorun( function ( computation ) {
+					Template._currentInstance = template.instances[ index ];
+
+					self.set( '_' + helperName, helperHandler.call( self.get( 'this' ) ) );
+				});
+			});
+		}
+
+		if ( template._eventHandlers ) self.on( template._eventHandlers );
+
+		if ( template._onCreated ) template._onCreated.call( template.instances[ index ] );
+	},
+	// // render	...each time the instance is rendered (normally only once)
+	onrender: function () {
+		var self = this,
+			template = self._constructor,
+			index = getIndex( self );
+
+		if ( template._onRendered ) template._onRendered.call( template.instances[ index ] );
+	},
+	// // complete	...after render, once any intro transitions have completed
+	// oncomplete: function () {},
+	// // change	...when data changes
+	// onchange: function ( changedData ) {},
+	// // update	...after ractive.update() is called
+	// onupdate: function () {},
+	// // unrender	...each time the instance is unrendered
+	// onunrender: function () {},
+	// // teardown	...each time the instance is destroyed (after unrender, if the teardown is responsible for triggering the unrender)
+	onteardown: function () {
+		var self = this,
+			template = self._constructor,
+			index = getIndex( self );
+
+		if ( template._onDestroyed ) template._onDestroyed.call( template.instances[ index ] );
+
+		if ( template._trackers ) destroyTrackers( template );
+	},
+	// // insert	...each time ractive.insert() is called
+	// oninsert: function () {},
+	// // detach	...each time ractive.detach() is called (note: ractive.insert() calls ractive.detach())
+	// ondetach: function () {}
+
+	// isolated ...Isolated is defaulted to false. This applies to your template scope being
+	// isolated to only the data that is passed in. For example if you wanted to access a
+	// particular variable on your parent data as if it existed on your component then
+	// setting isolated false would allow this. However if you wanted your template scoped to
+	// only data you give it so that everything was very module then set isolated to true.
+	// isolated: true
+});
+
 var template = function template ( importedTemplate ) {
 		var self = this,
 			regExPattern = /<\/?template(.|\n)*?>\n?/g,
+			template = ( importedTemplate ) ? importedTemplate.replace( regExPattern, '' ) : '',
 			altDOM;
 
-		if ( importedTemplate ) self._template = importedTemplate.replace( regExPattern, '' );
-
-		if ( self._template ) {
-			self.name = $( '<div/>' ).html( importedTemplate ).children().first().attr( 'name' );
+		if ( template ) {
+			self.name = $( '<div/>' ).html( importedTemplate ).children().first().attr( 'name' ) || 'body';
 
 			// Alternative HTML parser
-			altDOM = HTMLtoDOM( '<div id="MDTtemplate">' + self._template + '</div>' );
+			altDOM = HTMLtoDOM( '<div id="MDTtemplate">' + template + '</div>' );
 			self.document = $( altDOM.getElementsByTagName( 'body' ) );
-			self.document.append( $( self.document.children()[ 0 ] ).contents() );
-			self.document.find( '#MDTtemplate' ).remove();
-		}
 
-		self.data = {};
+			if ( self.document ) {
+				self.document.append( $( self.document.children()[ 0 ] ).contents() );
+
+				self.document.find( '#MDTtemplate' ).remove();
+				self.document.find( 'script' ).remove();
+			}
+
+			self.instances = {};
+		}
+	}
+
+	getIndex = function ( instance ) {
+		var key = ( instance.component.parentFragment ) ? instance.component.parentFragment.key : 0;
+
+		return ( instance.component.parentFragment ) ? instance.component.parentFragment.index : key;
+	},
+
+	itShouldBecomeComponent = function ( template ) {
+		return (
+			// !!template._events ||
+			!!template._helpers //||
+			// !!template._onCreated ||
+			// !!template._onRendered ||
+			// !!template._onDestroyed
+		);
+	},
+
+	destroyTrackers = function ( template ) {
+		_.each( template._trackers, function ( tracker ) {
+			if ( tracker.active ) tracker.currentComputation.stop();
+		});
+
+		template._trackers = null;
 	};
 
-template.prototype.compile = function () {
-	var self = this;
+template.prototype.events = function ( eventMap ) {
+	this._events = eventMap || {};
+};
 
-	if ( self.document ) {
-		if ( self._onRendered ) {
-			var onRenderedHandlerId = '_' + _.uniqueId( Date.now() ) + '_',
-				onRenderedHandler = function ( transition ) {
-					var self = this;
-
-					self._onRendered();
-
-					transition.complete();
-				};
-
-			self.document.children().first().attr( 'intro', onRenderedHandlerId );
-
-			Template._transitions[ onRenderedHandlerId ] = onRenderedHandler.bind( self );
-		}
-
-		// Remove already loaded scripts
-		self.document.find( 'script' ).remove();
-
-		self.initEvents();
-
-		self.innerHTML = _.unescape( self.document.html() );
-
-		self.collectPartials();
-
-		return self;
-	}
-},
-
-template.prototype.collectPartials = function () {
+template.prototype.helpers = function ( helpers ) {
 	var self = this,
-		regEx = /\{+\s*>\s*(\w+)\s*\}+/g,
-		regExResult;
+		helperGetter,
+		helperSetter;
 
-	self._partialsList = {};
-
-	while ( ( regExResult = regEx.exec( self.innerHTML ) ) != null ) {
-		self._partialsList[ regExResult[ 1 ] ] = regExResult[ 0 ];
-	}
-
-	return self;
-},
-
-template.prototype.initEvents = function () {
-	var self = this,
-		proxyEventHandler = function ( eventHandler ) {
-			var self = this;
-
-			// Convert Ractive event to Meteor compatible event
-			self.fire = function ( ractiveEvent ) {
-				eventHandler.call( ractiveEvent.node, ractiveEvent.original, ractiveEvent );
-			}
-		},
-		triggers,
-		eventHandler,
-		eventHandlerId,
-		eventSelectorPair;
-
-	if ( typeof self._events == 'object' && Object.keys( self._events ).length > 0 ) {
-		_.each( self._events, function ( _eventHandler, _eventType ) {
-			triggers = ( _eventType ) ? _eventType.split( ',' ) : [];
-			eventHandlerId = '_' + _.uniqueId( Date.now() ) + '_';
-			eventHandler = new proxyEventHandler( _eventHandler );
-
-			_.each( triggers, function ( trigger ) {
-				eventSelectorPair = trigger.split( ' ' );
-
-				self.document.find( eventSelectorPair[ 1 ].trim() ).attr( 'on-' + eventSelectorPair[ 0 ].trim(), eventHandlerId );
-			});
-
-			Template._events[ eventHandlerId ] = eventHandler.fire;
-		});
-	}
-
-	return self;
-},
-
-template.prototype.render = function () {
-	return this.innerHTML;
-},
-
-template.prototype.events = function ( templateEvents ) {
-	this._events = templateEvents || {};
-},
-
-template.prototype.helpers = function ( templateHelpers ) {
-	var self = this;
-
-	self.context = undefined;
-
-	self._helpers = templateHelpers || {};
+	self._helpers = helpers || {};
 
 	if ( typeof self._helpers == 'object' && Object.keys( self._helpers ).length > 0 ) {
-		_.each( self._helpers, function ( helperHandler, helperName ) {
-			Tracker.autorun( function ( computation ) {
-				self.data[ helperName ] = helperHandler.apply( self.context || self.data );
-			});
-		});
 
-		Template._data[ self.name ] = self.data;
+		self.computed = {};
+
+		_.each( self._helpers, function ( helperHandler, helperName ) {
+			helperGetter = function () {
+				return this.get( '_' + helperName );
+			};
+
+			helperSetter = function ( newData ) {
+				this.set( '_' + helperName, newData );
+			};
+
+			self.computed[ helperName ] = {
+				get: helperGetter,
+				set: helperSetter
+			}
+		});
 	}
-},
+};
 
 template.prototype.onCreated = function ( handler ) {
-	if ( handler ) this._onCreated = handler.bind( this );
-},
+	if ( handler ) this._onCreated = handler;
+};
 
 template.prototype.onRendered = function ( handler ) {
-	if ( handler ) this._onRendered = handler.bind( this );
-},
+	if ( handler ) this._onRendered = handler;
+};
 
 template.prototype.onDestroyed = function ( handler ) {
-	if ( handler ) this._onDestroyed = handler.bind( this );
+	if ( handler ) this._onDestroyed = handler;
+};
+
+template.prototype.autorun = function ( runFunc, options ) {
+	return Template._autorun.call( this, runFunc, options );
 };
 
 
 Template = {
 	_templates: {},
 
-	_partialsList: {},
+	_components: {},
 
 	_partials: {},
 
-	_data: {},
-
-	_events: {},
-
 	_helpers: {},
 
-	_transitions: {},
+	_autorun: function ( runFunc, options ) {
+		var self = this,
+			newTracker;
+
+		if ( runFunc ) {
+			if ( !self._trackers ) self._trackers = [];
+
+			newTracker = Tracker.autorun( runFunc, options );
+
+			self._trackers.push( newTracker );
+
+			return newTracker;
+		}
+	},
 
 	_importTemplate: function ( link, callback ) {
 		$.get( link.href, function ( importedTemplate ) {
@@ -182,148 +223,194 @@ Template = {
 			});
 	},
 
-	_compileTemplate: function ( template, callback ) {
-		var self = this;
+	_initEvents: function ( template ) {
+		var self = this,
+			proxyEventHandler = function ( eventHandler ) {
+				// Convert Ractive event to Meteor compatible event
+				this.fire = function ( ractiveEvent ) {
+					Template._currentInstance = template._instance;
 
-		template.compile();
+					eventHandler.call( ractiveEvent.node, ractiveEvent.original, template, ractiveEvent );
+				}
+			},
+			triggers,
+			eventHandler,
+			eventHandlerId,
+			eventSelectorPair;
 
-		self._partialsList = _.extend( self._partialsList, template._partialsList );
+		if ( typeof template._events == 'object' && Object.keys( template._events ).length > 0 ) {
+			template._eventHandlers = {};
 
-		if ( template._onCreated ) template._onCreated();
+			_.each( template._events, function ( _eventHandler, _eventType ) {
+				triggers = ( _eventType ) ? _eventType.split( ',' ) : [];
+				eventHandlerId = '_' + _.uniqueId( Date.now() ) + '_';
+				eventHandler = new proxyEventHandler( _eventHandler );
 
-		if ( callback ) callback( template );
+				_.each( triggers, function ( trigger ) {
+					eventSelectorPair = trigger.split( ' ' );
+
+					template.document.find( eventSelectorPair[ 1 ].trim() ).attr( 'on-' + eventSelectorPair[ 0 ].trim(), eventHandlerId );
+				});
+
+				template._eventHandlers[ eventHandlerId ] = eventHandler.fire;
+			});
+		}
 	},
 
-	_initHelpers: function ( template ) {
+	_compileTemplate: function ( template ) {
 		var self = this;
 
-		self.context = undefined;
+		if ( template.document ) {
+			// Remove already loaded scripts
+			template.document.find( 'script' ).remove();
 
-		if ( typeof template._helpers == 'object' && Object.keys( template._helpers ).length > 0 ) {
-			_.each( template._helpers, function ( helperHandler, helperName ) {
-				Tracker.autorun( function ( computation ) {
-					self._data[ helperName ] = helperHandler.apply( self.context || self._data );
+			self._initEvents( template );
+
+			template.ractiveTemplate = _.unescape( template.document.html() );
+		}
+	},
+
+	_checkComponents: function ( template ) {
+		var self = this,
+			regExPattern = /\{+\s*>\s*(\w+)\s*\}+/g,
+			partialName,
+			component,
+			regExResult,
+			regExMatch;
+
+		while ( ( regExResult = regExPattern.exec( template.ractiveTemplate ) ) != null ) {
+			regExMatch = regExResult[ 0 ];
+			partialName = regExResult[ 1 ];
+
+			if ( itShouldBecomeComponent( Template._templates[ partialName ] ) ) {
+				if ( !template._components ) template._components = {};
+
+				template.ractiveTemplate = template.ractiveTemplate.replace( regExMatch, '<' + partialName + '/>' );
+
+				template._components[ partialName ] = null;
+			} else {
+				if ( !template._partials ) template._partials = {};
+
+				template._partials[ partialName ] = '';
+			}
+		};
+	},
+
+	_collectComponents: function () {
+		var self = this,
+			component;
+
+		_.each( self._templates, function ( template ) {
+			if ( template._components ) {
+				_.each( Object.keys( template._components ), function ( componentName ) {
+					component = self._templates[ componentName ];
+
+					if ( !component.ractive ) {
+						component.ractive = RactiveTemplate.extend({
+							template: component.ractiveTemplate,
+							// data    : function () {
+							// 	return component.data;
+							// },
+							computed: component.computed
+						});
+					}
+
+					template._components[ componentName ] = component.ractive;
+					self._components[ componentName ] = component.ractive;
+				});
+			}
+		});
+	},
+
+	_collectPartials: function () {
+		var self = this;
+
+		_.each( self._templates, function ( template ) {
+			if ( template._partials ) {
+				_.each( Object.keys( template._partials ), function ( partialName ) {
+					template._partials[ partialName ] = self._templates[ partialName ].ractiveTemplate;
+					self._partials[ partialName ] = self._templates[ partialName ].ractiveTemplate;
+				});
+			}
+		});
+	},
+
+	_initGlobalHelpers: function () {
+		var self = this;
+
+		if ( typeof self._helpers == 'object' && Object.keys( self._helpers ).length > 0 ) {
+			self._autorun( function ( computation ) {
+				_.each( self._helpers, function ( helperHandler, helperName ) {
+					self.body.data[ helperName ] = function () {
+						Template._currentInstance = self.body.instances[ 0 ];	// ???
+
+						return helperHandler.call( self.ractive.get() );
+					}
 				});
 			});
 		}
 	},
 
-	_updateHelpers: function ( template ) {
-		if ( template.context && typeof template._helpers == 'object' && Object.keys( template._helpers ).length > 0 ) {
-			_.each( template._helpers, function ( helperHandler, helperName ) {
-				template.data[ helperName ] = helperHandler.apply( template.context );
-			});
-		}
-	},
-
-	_renderBody: function () {
+	_render: function () {
 		var self = this;
 
-		self.body = new template();
-		self.body.name = 'body';
-		self.body.document = $( 'body' );
+		self.body = new template( _.unescape( $( 'body' ).html() ) );
 
 		self._getScript( window.location.href.replace( '.html', '.js' ), function ( error, script ) {
 			if ( error ) {
 				// TODO: Handle errors...
 			} else {
-				var currentContext = '';
-
+				self._templates.body = self.body;
 				self._compileTemplate( self.body );
 
-				_.each( self._partialsList, function ( partialToken, partialName ) {
-					// Init partial parents
-					_.find( self._templates, function ( template ) {
-						if ( template._partialsList[ partialName ] ) {
-							self._templates[ partialName ]._parent = template;
-							// Break the loop
-							return true;
-						}
-					});
-
-					self._partials[ partialName ] = self._templates[ partialName ].render.bind( self._templates[ partialName ] );
-				});
-
-				// Init template helpers
 				_.each( self._templates, function ( template ) {
-					_.each( template._partialsList, function ( partial, partialName ) {
-						currentContext = ( _.isEmpty( self._templates[ partialName ].data ) ) ? '' : ' ~/' + partialName;
-						template.innerHTML = template.innerHTML.replace( partial, '{{>_getPartial(\'' + partialName + '\',.,@keypath,@index,@key)' + currentContext + '}}' );
-					});
+					self._checkComponents( template );
 				});
 
-				self._data._getPartial = function ( partialName, partialContext, keyPath, index, key ) {
-					// Save current context
-					var currentContext = self._templates[ partialName ]._parent.context;
+				self._collectComponents();
+				self._collectPartials();
 
-					if ( currentContext ) {
-						if ( typeof index != 'undefined' ) {
-							currentContext = currentContext[ index ];
-						} else if ( typeof key != 'undefined' ) {
-							currentContext = currentContext[ key ];
-						}
-					} else if ( partialContext ) {
-						currentContext = partialContext[ partialName ];
-					}
-
-					self._templates[ partialName ].context = currentContext;
-
-					self._updateHelpers( self._templates[ partialName ] );
-
-					// Continue normally
-					return partialName;
-				};
-
-				// Init BODY helpers
-				self._initHelpers( self.body );
-
-				// Init global helpers
-				self._initHelpers( self );
+				self._initGlobalHelpers();
 
 				// Render the page
-				self._ractive = new Ractive({
-					el                : 'body',
-					template          : self.body.innerHTML,
-					partials          : self._partials,
-					data              : self._data,
-					magic             : true,
-					oninit            : function () {
-						if ( self.body._onCreated ) self.body._onCreated.call( self.body );
-					},
-					oncomplete        : function () {
-						if ( self.body._onRendered ) self.body._onRendered.call( self.body );
-					},
-					onchange          : function () {
-						// A trick to re-render reactively updated templates/partials
-						self._ractive.set( self._ractive.get() );
-					},
-					onteardown        : function () {
-						// if ( self.body._onDestroyed ) $( 'body' ).off().on( 'destroyed', self.body._onDestroyed );
-						if ( self.body._onDestroyed ) self.body._onDestroyed.call( self.body );
-					},
-					// Hack the onRendered event handler
-					transitionsEnabled: true,
-					transitions       : self._transitions
-				});
+				self.ractive = new Ractive({
+					el        : self.body.name,
+					template  : self.body.ractiveTemplate,
+					partials  : self._partials,
+					components: self._components,
+					data      : self.body.data,
+					computed  : self.body.computed,
+					magic     : true,
 
-				// Init global events
-				self._ractive.on( self._events );
+					// Lifecycle Events:
+					// // init	...when the instance is ready to be rendered
+					oninit: function () {
+						if ( self.body._eventHandlers ) self.ractive.on( self.body._eventHandlers );
+
+						if ( self.body._onCreated ) self.body._onCreated( self.body.instances[ 0 ] );
+					},
+					// render	...each time the instance is rendered (normally only once)
+					onrender: function () {
+						if ( self.body._onRendered ) self.body._onRendered( self.body.instances[ 0 ] );
+					},
+					// teardown	...each time the instance is destroyed (after unrender, if the teardown is responsible for triggering the unrender)
+					onteardown: function () {
+						if ( self.body._onDestroyed ) self.body._onDestroyed( self.body.instances[ 0 ] );
+
+						if ( self._trackers ) destroyTrackers( self );
+					},
+				});
 			}
 		});
 	},
 
 	_init: function () {
 		var self = this,
-			notCompiled = $( 'link[rel="import"]' ).length;
-
-		$.event.special.destroyed = {
-			remove: function ( o ) {
-				if ( o.handler ) o.handler()
-			}
-		}
+			$imports = $( 'link[rel="import"]' ),
+			notCompiled = $imports.length;
 
 		// Import templates
-		_.each( $( 'link[rel="import"]' ), function ( link ) {
+		_.each( $imports, function ( link ) {
 			self._importTemplate( link, function ( newTemplate ) {
 				self._templates[ newTemplate.name ] = newTemplate;
 				self[ newTemplate.name ] = newTemplate;
@@ -334,11 +421,10 @@ Template = {
 					if ( error ) {
 						// TODO: Handle errors...
 					} else {
-						self._compileTemplate( newTemplate, function ( compiledTemplate ) {
-							notCompiled--;
+						self._compileTemplate( newTemplate );
+						notCompiled--;
 
-							if ( notCompiled == 0 ) self._renderBody();
-						});
+						if ( notCompiled == 0 ) self._render();
 					}
 				});
 			});
@@ -350,6 +436,23 @@ Template = {
 		var self = this;
 
 		self._helpers[ helper ] = handler.bind( self );
+	},
+
+	instance: function () {
+		return this._currentInstance;
+	},
+
+	currentData: function () {
+		// [X] Inside an onCreated, onRendered, or onDestroyed callback, returns the data context of the template.
+		// [X] Inside an event handler, returns the data context of the template on which this event handler was defined.
+		// [ ] Inside a helper, returns the data context of the DOM node where the helper was used.
+		// [ ] Establishes a reactive dependency on the result.
+
+		return ( this._currentInstance ) ? this._currentInstance.get( 'this' ) : null;
+	},
+
+	parentData: function () {
+		return this._parentData;
 	}
 };
 

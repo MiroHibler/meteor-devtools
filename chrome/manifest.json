@@ -27,15 +27,20 @@
 			"assets/js/storage.js",
 			"assets/js/settings.js",
 			"assets/js/console.js"
-		]
+		],
+		"persistent": true
 	},
 	"permissions"            : [
+		"webRequest",
+		"webRequestBlocking",
+		"http://*/*",
+		"https://*/*",
 		"tabs",
 		"contextMenus",
 		"<all_urls>",
 		"storage"
 	],
-	"content_security_policy": "default-src 'self' chrome-extension-resource:; style-src 'self' 'unsafe-eval' 'unsafe-inline' chrome-extension-resource: text/javascript http://fonts.googleapis.com https://fonts.googleapis.com http://fonts.gstatic.com https://fonts.gstatic.com https://maxcdn.bootstrapcdn.com https://maxcdn.bootstrapcdn.com http://code.ionicframework.com https://code.ionicframework.com; font-src http://fonts.googleapis.com https://fonts.googleapis.com http://fonts.gstatic.com https://fonts.gstatic.com https://maxcdn.bootstrapcdn.com https://maxcdn.bootstrapcdn.com http://code.ionicframework.com https://code.ionicframework.com; script-src 'self' 'unsafe-eval'; connect-src *; frame-src *;",
+	"content_security_policy": "default-src 'self' chrome-extension-resource:; style-src 'self' 'unsafe-eval' 'unsafe-inline' chrome-extension-resource: text/javascript http://fonts.googleapis.com https://fonts.googleapis.com http://fonts.gstatic.com https://fonts.gstatic.com; font-src http://fonts.googleapis.com https://fonts.googleapis.com http://fonts.gstatic.com https://fonts.gstatic.com; script-src 'self' 'unsafe-eval'; connect-src *; frame-src *;",
 	"page_action"            : {
 		"default_icon": {
 			"19": "assets/icons/icon19.png",

@@ -1,0 +1,13 @@
+<template name="user">
+	<tr>
+		<td><a href="#" data-id="{{ this._id }}">{{ this._id }}</a></td>
+		<td>{{ userName }}</td>
+		<td>{{ email }}</td>
+		<td><span class="{{#if statusLabel }}label label-{{ statusLabel }}{{else}}text-muted{{/if}}">{{ status }}</span></td>
+	</tr>
+{{#if isEditing }}
+	<tr>
+		<td colspan="4">{{> Template.dynamic template="userEditor" data=this }}</td>
+	</tr>
+{{/if}}
+</template>

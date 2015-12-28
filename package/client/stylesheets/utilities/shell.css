@@ -1,0 +1,11 @@
+#output pre {
+	overflow: auto;
+	font-size: 11px;
+}
+
+#command {
+    font-size: 12px;
+	padding-left: 10px;
+	line-height: 1.6rem !important;
+	border: 1px solid #ccc;
+}

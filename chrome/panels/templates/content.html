@@ -8,16 +8,22 @@
 		{{#if showSession }}
 			{{> sessionVariables }}
 		{{else}}
-			{{#if showUsers }}
-				<!-- iframe containing the real Meteor page from the app -->
-				{{> meteorDevTools }}
+			{{#if showMeteorSettings }}
+				{{> meteorSettings }}
 			{{else}}
-				{{#if showMeteorSettings }}
-					{{> meteorSettings }}
+				{{#if showMeteorEnvironment }}
+					{{> meteorEnvironment }}
 				{{else}}
 					{{#if showPackages }}
 						{{> packagesList }}
 					{{else}}
+						{{#if showDebugger }}
+							{{> meteorDebugger }}
+						{{else}}
+							<!-- In all other cases, go to inspected app -->
+							<!-- iframe containing the real Meteor page from the app -->
+							{{> meteorDevTools }}
+						{{/if}}
 					{{/if}}
 				{{/if}}
 			{{/if}}

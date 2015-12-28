@@ -41,13 +41,12 @@ var Editor = function ( container, options, json ) {
 		self._editor = new JSONEditor( container, _.extend( {}, DEFAULTS, options ), json );
 	};
 
-Editor.prototype.init = function ( name, data, callback ) {
+Editor.prototype.init = function ( name, data, changeHandler ) {
 	var self = this;
 
-	self._editor.setName( name );
-	self._onChange = callback;
-
-	self.set( data );
+	if ( name ) self._editor.setName( name );
+	if ( data ) self.set( data );
+	if ( changeHandler ) self._onChange = changeHandler;
 };
 
 Editor.prototype.set = function ( data ) {
@@ -55,10 +54,10 @@ Editor.prototype.set = function ( data ) {
 
 	self.deactivateFields();
 
-	self._oldJSON = data || {};
+	// self._oldJSON = data || {};
 	self._editor.set( data || {} );
 
-	if ( data && !_.isEmpty( data ) ) self.activateFields();
+	self.setEditingFlag( data && !_.isEmpty( data ) );
 };
 
 Editor.prototype.deltaEdit = function () {
@@ -107,63 +106,42 @@ Editor.prototype.setEditingFlag = function ( flag ) {
 
 	self._isEditing = flag;
 
-	if ( self._isEditing ) self.activate();
-};
-
-Editor.prototype.activate = function () {
-	var self = this;
-
-	self.deactivate();
-
-	self._oldJSON = self._editor.get();
-};
-
-Editor.prototype.deactivate = function () {
-	var self = this;
-
-	self.deactivateFields();
+	if ( self._isEditing ) {
+		self.activateFields();
+	} else {
+		self.deactivateFields();
+	}
 };
 
 Editor.prototype.activateFields = function () {
 	var self = this,
-		fieldInputs,
-		valueInputs;
+		$fieldInputs,
+		$valueInputs;
 
-	self._editor.expandAll();
+	self.deactivateFields();
 
-	fieldInputs = $( '#' + $( self._editor.container ).attr( 'id' ) + ' div[contenteditable="true"].field' ),
-	valueInputs = $( '#' + $( self._editor.container ).attr( 'id' ) + ' div[contenteditable="true"].value' );
+	$fieldInputs = $( '#' + $( self._editor.container ).attr( 'id' ) + ' div[contenteditable="true"].field' ),
+	$valueInputs = $( '#' + $( self._editor.container ).attr( 'id' ) + ' div[contenteditable="true"].value' );
 
-	// self.deactivateFields();
-
-	if ( fieldInputs.length ) {
-		fieldInputs.focusin( function ( eventObject ) {
-			self.setEditingFlag( true );
-
-			$( eventObject.currentTarget ).focusout( function ( eventObject ) {
-				self.setEditingFlag( false );
-			});
-		});
+	if ( $fieldInputs.length ) {
+		$fieldInputs.focusin( function ( eventObject ) {
+			self._oldJSON = self._editor.get();
+		}).focusout( self.handleChange.bind( self ) );
 	}
 
-	if ( valueInputs.length ) {
-		valueInputs.focusin( function ( eventObject ) {
-			self.setEditingFlag( true );
+	if ( $valueInputs.length ) {
+		$valueInputs.focusin( function ( eventObject ) {
+			self._oldJSON = self._editor.get();
+		}).keypress( function ( eventObject ) {
+			if ( eventObject.which == 13 ) {
+				eventObject.preventDefault();
 
-			$( eventObject.currentTarget ).focusout( self.handleChange.bind( self ) );
-			$( eventObject.currentTarget ).keypress( function ( eventObject ) {
-				if ( eventObject.which == 13 ) {
-					eventObject.preventDefault();
+				self.handleChange( eventObject );
 
-					self.handleChange( eventObject );
-
-					return false;
-				}
-			});
-		});
+				return false;
+			}
+		}).focusout( self.handleChange.bind( self ) );
 	}
-
-	// self._editor.collapseAll();
 };
 
 Editor.prototype.deactivateFields = function () {
@@ -173,10 +151,6 @@ Editor.prototype.deactivateFields = function () {
 
 	$( '#' + $( self._editor.container ).attr( 'id' ) + ' div[contenteditable="true"].field' ).off();
 	$( '#' + $( self._editor.container ).attr( 'id' ) + ' div[contenteditable="true"].value' ).off();
-
-	// self._editor.collapseAll();
-
-	self.setEditingFlag( false );
 };
 
 Editor.prototype.handleChange = function () {
@@ -288,4 +262,6 @@ Editor.prototype.handleChange = function () {
 
 		if ( !_.isEmpty( newData ) && self._onChange ) self._onChange( newData );
 	}
+
+	self._oldJSON = self._editor.get();
 };

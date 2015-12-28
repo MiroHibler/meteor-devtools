@@ -63,6 +63,16 @@ Template.body.onRendered( function () {
 
 									break;
 
+								case 'debuggerUrl':
+									DevTools.inspectedApp.debuggerUrl.set( data[ attribute ] );
+
+									break;
+
+								case 'environment':
+									DevTools.inspectedApp.environment.set( data[ attribute ] );
+
+									break;
+
 								case 'release':
 									DevTools.inspectedApp.release.set( data[ attribute ] );
 
@@ -78,8 +88,18 @@ Template.body.onRendered( function () {
 
 									break;
 
+								case 'meteorEnvironment':
+									DevTools.inspectedApp.environment.set( data[ attribute ] );
+
+									break;
+
 								case 'packages':
 									DevTools.inspectedApp.packages.set( data[ attribute ] );
+
+									break;
+
+								case 'packageInfo':
+									DevTools.inspectedApp.packageInfo.set( data[ attribute ] );
 
 									break;
 

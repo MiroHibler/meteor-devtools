@@ -93,20 +93,4 @@ var myTabId,
 	connect();
 
 	window.addEventListener( 'message', receivePublicMessage, false );
-
-	/*
-	 | Query Meteor App Status
-	 */
-	// sendMessageToMeteor({
-	// 	action: 'get',
-	// 	target: [
-	// 		'absoluteUrl',
-	// 		'release',
-	// 		'insecure',
-	// 		'autopublish',
-	// 		'isReady'
-	// 	]
-	// }, function ( response ) {
-	// 	DevTools.console.success( '[IS] √|<-  receivedByMeteor: ', response.sentToMeteor );
-	// });
 })();

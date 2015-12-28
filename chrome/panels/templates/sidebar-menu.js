@@ -13,16 +13,32 @@ Template.sidebarMenu.helpers({
 		return ( DevTools.activeView.get() == 'session' );
 	},
 
+	isCollectionsViewActive: function () {
+		return ( DevTools.activeView.get() == 'collections' );
+	},
+
 	isUsersViewActive: function () {
 		return ( DevTools.activeView.get() == 'users' );
 	},
 
-	isMPackagesViewActive: function () {
+	isPackagesViewActive: function () {
 		return ( DevTools.activeView.get() == 'packages' );
 	},
 
 	isMeteorSettingsViewActive: function () {
 		return ( DevTools.activeView.get() == 'meteorSettings' );
+	},
+
+	isMeteorEnvironmentViewActive: function () {
+		return ( DevTools.activeView.get() == 'meteorEnvironment' );
+	},
+
+	isShellViewActive: function () {
+		return ( DevTools.activeView.get() == 'shell' );
+	},
+
+	isDebuggerViewActive: function () {
+		return ( DevTools.activeView.get() == 'debugger' );
 	}
 });
 

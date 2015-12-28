@@ -3,7 +3,18 @@
 		<h1>{{ activeView.name }}<small>{{ activeView.section }}</small></h1>
 		<ol class="breadcrumb">
 			<li><a href="#"><i class="fa fa-{{ activeView.icon }}"></i> Home</a></li>
-			<li class="active">{{ activeView.name }}</li>
+			<li class="active">
+			{{#if dropdownItems }}
+				<button type="button" class="btn btn-box-tool dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+					{{ activeView.name }}&nbsp;<i class="fa fa-cog"></i>
+				</button>
+				<ul class="dropdown-menu" role="menu">
+				{{{ dropdownItems }}}
+				</ul>
+			{{else}}
+				{{ activeView.name }}
+			{{/if}}
+			</li>
 		</ol>
 	</section>
 </template>

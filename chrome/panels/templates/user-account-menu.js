@@ -12,7 +12,7 @@ Template.userAccountMenu.helpers({
 	userName: function () {
 		var user = DevTools.inspectedApp.currentUser.get();
 
-		return ( user ) ? ( user.username || ( user.emails && user.emails.length ) ? user.emails[ 0 ].address : user._id ) : '';
+		return ( user ) ? ( user.username ) ? user.username : ( ( user.emails && user.emails.length ) ? user.emails[ 0 ].address : user._id ) : '';
 	},
 
 	userStatus: function () {

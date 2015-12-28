@@ -4,11 +4,42 @@
 // chrome.tabs.*
 // chrome.runtime.*
 // chrome.extension.*
-
-var myTabId,
+var isActive = true,
+	cspFilter = {
+		urls: [
+			'*://*/*'
+		],
+		types: [
+			'main_frame',
+			'sub_frame'/*,
+			'stylesheet',
+			'script',
+			'image',
+			'object',
+			'xmlhttprequest',
+			'other'*/
+		]
+	},
+	myTabId,
 	isReloading = false,
 	connections = {},
 	openCount = 0,
+
+	cspCallback = function ( details ) {
+		if ( !isActive ) return;
+
+		for ( var i = 0; i < details.responseHeaders.length; i++ ) {
+			if ( 'content-security-policy' === details.responseHeaders[ i ].name.toLowerCase() ) {
+				// console.info( 'Clearing response header [%s]', details.responseHeaders[ i ].value );
+				details.responseHeaders[ i ].value = '';
+			}
+		}
+
+		return {
+			responseHeaders: details.responseHeaders
+		};
+	},
+
 	sendToDevTools = function ( message, sendResponse ) {
 
 		DevTools.console.log( '[BG]  >-->  sendToDevTools: ', message.data );
@@ -53,6 +84,9 @@ var myTabId,
 		}
 	};
 
+// https://github.com/PhilGrayson/chrome-csp-disable
+chrome.webRequest.onHeadersReceived.addListener( cspCallback, cspFilter, [ 'blocking', 'responseHeaders' ] );
+
 chrome.runtime.onConnect.addListener( function ( port ) {
 	var devToolsListener = function ( message, sender, sendResponse ) {
 			switch ( message.action ) {
@@ -73,14 +107,16 @@ chrome.runtime.onConnect.addListener( function ( port ) {
 						data: {
 							action: 'get',
 							target: [
-								'absoluteUrl',
-								'release',
-								'meteorSettings',
-								'packages',
-								'collections',
-								'templates',
-								'insecure',
-								'autopublish',
+								// 'absoluteUrl',
+								// 'debuggerUrl',
+								// 'release',
+								// 'meteorSettings',
+								// 'meteorEnvironment',
+								// 'collections',
+								// 'templates',
+								// 'insecure',
+								// 'autopublish',
+								// 'packages',
 								'isReady'
 							]
 						},
