@@ -2,7 +2,7 @@
 
 A Meteor Package paired with Chrome DevTools Extension for debugging a Meteor app.
 
-Currently supporting only CRUD model on Session variables and reading current user and Users collections.
+Currently supporting only Blaze.
 
 > *NOTE:* This is very WIP (work in progress) - there are a lot of bugs and TODOs!
 

@@ -2,12 +2,7 @@ RactiveTemplate = Ractive.extend({
 	// // Lifecycle Events:
 	// // construct	...as soon as new Ractive(...) happens, before any setup work takes place
 	onconstruct: function ( options ) {
-		var self = this,
-			template = Template._templates[ self.component.name ];
-
-		self._constructor = template;
-
-		template._instance = self;
+		this._constructor = Template._templates[ this.component.name ];
 	},
 	// // config	...once all configuration options have been processed
 	// onconfig: function () {},
@@ -15,31 +10,43 @@ RactiveTemplate = Ractive.extend({
 	oninit: function () {
 		var self = this,
 			template = self._constructor,
-			index = getIndex( self );
+			index = getIndex( self ) || 0;
 
-		template.instances[ index ] = self;
+		template.instances[ ( index ) ? index : 0 ] = self;
+
+		if ( template._onCreated ) {
+			Template._currentInstance = template.instances[ index ];
+
+			template._onCreated.call( template.instances[ index ] );
+		}
 
 		if ( typeof template._helpers == 'object' && Object.keys( template._helpers ).length > 0 ) {
 			_.each( template._helpers, function ( helperHandler, helperName ) {
-				template.autorun( function ( computation ) {
+				var _helperHandler = function () {
 					Template._currentInstance = template.instances[ index ];
 
-					self.set( '_' + helperName, helperHandler.call( self.get( 'this' ) ) );
+					return helperHandler.call( template.instances[ index ].get( 'this' ) );
+				};
+
+				template.autorun( function ( computation ) {
+					self.set( '_' + helperName, _helperHandler() );
 				});
 			});
 		}
 
 		if ( template._eventHandlers ) self.on( template._eventHandlers );
-
-		if ( template._onCreated ) template._onCreated.call( template.instances[ index ] );
 	},
 	// // render	...each time the instance is rendered (normally only once)
 	onrender: function () {
 		var self = this,
 			template = self._constructor,
-			index = getIndex( self );
+			index = getIndex( self ) || 0;
 
-		if ( template._onRendered ) template._onRendered.call( template.instances[ index ] );
+		if ( template._onRendered ) {
+			Template._currentInstance = template.instances[ index ];
+
+			template._onRendered.call( template.instances[ index ] );
+		}
 	},
 	// // complete	...after render, once any intro transitions have completed
 	// oncomplete: function () {},
@@ -53,9 +60,13 @@ RactiveTemplate = Ractive.extend({
 	onteardown: function () {
 		var self = this,
 			template = self._constructor,
-			index = getIndex( self );
+			index = getIndex( self ) || 0;
 
-		if ( template._onDestroyed ) template._onDestroyed.call( template.instances[ index ] );
+		if ( template._onDestroyed ) {
+			Template._currentInstance = template.instances[ index ];
+
+			template._onDestroyed.call( template.instances[ index ] );
+		}
 
 		if ( template._trackers ) destroyTrackers( template );
 	},
@@ -97,18 +108,23 @@ var template = function template ( importedTemplate ) {
 	}
 
 	getIndex = function ( instance ) {
-		var key = ( instance.component.parentFragment ) ? instance.component.parentFragment.key : 0;
+		var parentFragment = instance.component.parentFragment,
+			key = ( parentFragment ) ? parentFragment.key : null;
 
-		return ( instance.component.parentFragment ) ? instance.component.parentFragment.index : key;
+		return ( parentFragment && parentFragment.index != null ) ? parentFragment.index : key;
+	},
+
+	isIteratee = function ( instance ) {
+		return ( getIndex( instance ) != null );
 	},
 
 	itShouldBecomeComponent = function ( template ) {
 		return (
-			// !!template._events ||
-			!!template._helpers //||
-			// !!template._onCreated ||
-			// !!template._onRendered ||
-			// !!template._onDestroyed
+			!!template._events ||
+			!!template._helpers ||
+			!!template._onCreated ||
+			!!template._onRendered ||
+			!!template._onDestroyed
 		);
 	},
 
@@ -224,13 +240,13 @@ Template = {
 	},
 
 	_initEvents: function ( template ) {
+		// Convert Ractive event to Meteor compatible event
 		var self = this,
 			proxyEventHandler = function ( eventHandler ) {
-				// Convert Ractive event to Meteor compatible event
 				this.fire = function ( ractiveEvent ) {
-					Template._currentInstance = template._instance;
+					Template._currentInstance = this;
 
-					eventHandler.call( ractiveEvent.node, ractiveEvent.original, template, ractiveEvent );
+					eventHandler.call( ractiveEvent.node, ractiveEvent.original, this, ractiveEvent );
 				}
 			},
 			triggers,

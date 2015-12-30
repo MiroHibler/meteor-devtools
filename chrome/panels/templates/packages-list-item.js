@@ -1,18 +1,22 @@
 Template.packagesListItem.events({
-	'click [data-name]': function ( event ) {
+	'click [data-name]': function ( event, template ) {
 		event.preventDefault();
 
-		Template.instance().isShowingInfo.set( !Template.instance().isShowingInfo.get() );
+		template.isShowingInfo.set( !template.isShowingInfo.get() );
 	}
 });
 
 Template.packagesListItem.helpers({
 	showInfo: function () {
-		return ( Template.instance() && Template.instance().isShowingInfo ) ? Template.instance().isShowingInfo.get() : false;
+		var self = Template.instance();
+
+		return ( self && self.isShowingInfo ) ? self.isShowingInfo.get() : false;
 	},
 
 	packageInfo: function () {
-		return ( Template.instance() && Template.instance().packageInfo ) ? Template.instance().packageInfo.get() : null;
+		var self = Template.instance();
+
+		return ( self && self.packageInfo ) ? self.packageInfo.get() : null;
 	},
 
 	packageName: function () {
@@ -31,26 +35,30 @@ Template.packagesListItem.helpers({
 Template.packagesListItem.onCreated( function () {
 	var self = this;
 
-	self.currentData = Template.currentData();
-
 	self.packageInfo = new ReactiveVar( null );
 
 	self.isShowingInfo = new ReactiveVar( false, function ( oldValue, newValue ) {
 		if ( oldValue == newValue ) return true;
 
 		if ( newValue && !self.packageInfo.get() ) {
-			console.log( 'Fetching package info for \'%s\'...', self.currentData.name );
-			// DevTools.sendMessage({
-			// 	action: 'get',
-			// 	target: 'packageInfo',
-			// 	data  : $( packageLink ).data( 'name' )
-			// });
+			DevTools.sendMessage({
+				action: 'get',
+				target: 'packageInfo',
+				data  : self.get( 'name' )
+			});
 		}
 	});
+});
 
-	// self.autorun( function () {
-	// // 	packageInfo = DevTools.inspectedApp.packageInfo.get();
-	// // console.info( 'Package %s - show info? %s', self.packageName, self.isShowingInfo.get() );
-	// // 	if ( packageInfo && packageInfo.name == self.name ) self.packageInfo = packageInfo.packageInfo;
-	// });
+Template.packagesListItem.onRendered( function () {
+	var self = this,
+		packageInfo;
+
+	Tracker.autorun( function () {
+		packageInfo = DevTools.inspectedApp.packageInfo.get();
+
+		if ( packageInfo && packageInfo.name == self.get( 'name' ) ) {
+			self.packageInfo.set( packageInfo.details );
+		}
+	});
 });
